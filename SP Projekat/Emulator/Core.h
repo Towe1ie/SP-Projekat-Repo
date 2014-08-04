@@ -14,6 +14,8 @@ typedef short REG;
 
 typedef BYTE MEM[MEMCAP];
 
+typedef enum {ZERO = 0, ONE} BIT;
+
 typedef struct
 {
 	REG r[8];
@@ -21,9 +23,12 @@ typedef struct
 } CPU;
 
 
-CPU cpu;
-MEM memory;
+extern CPU cpu;
+extern MEM memory;
+
+extern char work;
 
 void Emulate();
+ADDR LoadProgram(char *fileName);
 
 #endif

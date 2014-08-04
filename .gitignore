@@ -43,3 +43,12 @@ Icon
 *.vcxproj
 *.log
 *.lastbuildstate
+*.pdb
+*.exe
+*.idb
+*.obj
+*.tlog
+*.ilk
+*.user
+*.user
+*.user
