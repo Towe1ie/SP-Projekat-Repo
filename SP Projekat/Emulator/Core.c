@@ -1,9 +1,11 @@
 #include "Core.h"
 #include <stdio.h>
 #include "Utility.h"
+#include "Instructions.h"
 
 CPU cpu;
 MEM memory;
+UBYTE ir0, ir1;
 
 char work = 1;
 
@@ -18,12 +20,32 @@ void Emulate()
 
 	BYTE opCode;
 
+	//cpu.r[0] = -32768;
+	cpu.r[1] = -1;
+
 	while (work)
 	{
-		 opCode = GetOPCode(memory[cpu.pc]);
-		
+		ir1 = memory[cpu.pc];
+		ir0 = memory[cpu.pc + 1];
+		cpu.pc += 2;
 
-		 cpu.pc += 2;
+		opCode = GetInfoFromByte(7, 3, ir1);
+
+		switch (opCode)
+		{
+		case 0:
+			add();
+			break;
+		case 1:
+			sub();
+			break;
+		case 2:
+			mul();
+			break;
+		case 3:
+			div();
+			break;
+		}
 	}
 }
 
@@ -41,7 +63,7 @@ ADDR LoadProgram(char *fileName)
 		return -1;
 	}
 
-	fread(memory + entryAddr, sizeof(BYTE), 4, file);
+	fread(memory + entryAddr, sizeof(BYTE), 12, file);
 
 	return entryAddr;
 }

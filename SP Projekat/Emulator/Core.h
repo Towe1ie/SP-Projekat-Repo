@@ -15,6 +15,7 @@ typedef short REG;
 typedef BYTE MEM[MEMCAP];
 
 typedef enum {ZERO = 0, ONE} BIT;
+typedef enum {Z = 0, O, C, N, VM = 15} FLAG;
 
 typedef struct
 {
@@ -25,6 +26,7 @@ typedef struct
 
 extern CPU cpu;
 extern MEM memory;
+extern UBYTE ir0, ir1;
 
 extern char work;
 
