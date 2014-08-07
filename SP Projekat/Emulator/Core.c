@@ -18,6 +18,7 @@ void Emulate()
 	if (cpu.pc == -1)
 		return;
 
+	char o, c, n, z;
 	BYTE opCode;
 
 	//cpu.r[0] = -32768;
@@ -46,6 +47,13 @@ void Emulate()
 			div();
 			break;
 		}
+
+		z = GetFlag(Z);
+		n = GetFlag(N);
+		c = GetFlag(C);
+		o = GetFlag(O);
+
+		printf("Flags N Z O C\n      %d %d %d %d\n", n, z, o, c);
 	}
 }
 
