@@ -62,7 +62,15 @@ ADDR LoadProgram(char *fileName)
 {
 	FILE *file = NULL;
 	//int error = fopen_s(&file, fileName, "rb");
+#ifdef __gnu_linux__
 	file = fopen(fileName, "rb");
+#else
+#ifdef _WIN32
+	fopen_s(&file, fileName, "rb");
+#endif
+#endif
+
+	
 
 	ADDR entryAddr = 0;
 

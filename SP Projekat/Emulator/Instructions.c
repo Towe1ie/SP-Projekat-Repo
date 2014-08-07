@@ -16,10 +16,51 @@ void add()
 	WORD v1 = cpu.r[dst];
 	WORD v2 = cpu.r[src];
 
+#ifdef _WIN32
+	// sabiranje druga dva sabirka i provera za overflow i carry
+	__asm
+	{
+		push ax
+			mov ax, v2
+			add ax, imm
+			mov v2, ax
+			pop ax
+			jno l1
+			pushf
+			inc overflow
+			popf
+		l1 : jnc l2
+			 pushf
+			 inc carry
+			 popf
+		 l2 :
+	}
+
+	// sabiranje destinacije i prethodnog zbira i provera za oveflow i carry
+	__asm
+	{
+		push ax
+			mov ax, v1
+			add ax, v2
+			mov v1, ax
+			pop ax
+			jno l11
+			pushf
+			inc overflow
+			popf
+
+		l11: jnc l22
+			 pushf
+			 inc carry
+			 popf
+		 l22:
+	}
+
+#else
 #ifdef __gnu_linux__
 	// sabiranje druga dva sabirka i provera za overflow i carry
 	__asm__
-	(
+		(
 		"mov ax, %5\n"
 		"add ax, %4\n"
 		"mov %0, ax\n"
@@ -29,21 +70,21 @@ void add()
 		"inc al\n"
 		"mov %2, al\n"
 		"popf\n"
-	"l1 : jnc l2\n"
-		 "pushf\n"
-		 "mov al, %1\n"
-		 "inc al\n"
-		 "mov %1, al\n"
-		 "popf\n"
-	 "l2:\n"
-	 :"=m"(v2), "=m"(carry), "=m"(overflow)
-	 :"m"(v1), "m"(imm), "m"(v2)
-	 : "ax", "al"
-	);
+		"l1 : jnc l2\n"
+		"pushf\n"
+		"mov al, %1\n"
+		"inc al\n"
+		"mov %1, al\n"
+		"popf\n"
+		"l2:\n"
+		:"=m"(v2), "=m"(carry), "=m"(overflow)
+		: "m"(v1), "m"(imm), "m"(v2)
+		: "ax", "al"
+		);
 
 	// sabiranje destinacije i prethodnog zbira i provera za oveflow i carry
 	__asm__
-	(
+		(
 		"mov ax, %3\n"
 		"add ax, %4\n"
 		"mov %0, ax\n"
@@ -53,18 +94,19 @@ void add()
 		"inc al\n"
 		"mov %2, al\n"
 		"popf\n"
-	"l11: jnc l22\n"
+		"l11: jnc l22\n"
 		"pushf\n"
-		 "mov al, %1\n"
-		 "inc al\n"
-		 "mov %1, al\n"
+		"mov al, %1\n"
+		"inc al\n"
+		"mov %1, al\n"
 		"popf\n"
-	"l22:\n"
-	:"=m"(v1), "=m"(carry), "=m"(overflow)
-	:"m"(v1), "m"(v2)
-	:"ax", "al"
-	);
+		"l22:\n"
+		:"=m"(v1), "=m"(carry), "=m"(overflow)
+		: "m"(v1), "m"(v2)
+		: "ax", "al"
+		);
 
+#endif
 #endif
 
 	cpu.r[dst] = v1;
@@ -106,10 +148,52 @@ void sub()
 	WORD v1 = cpu.r[dst];
 	WORD v2 = cpu.r[src];
 
+#ifdef _WIN32
+	// oduzimanje druga dva sabirka i provera za overflow i carry
+	__asm
+	{
+		push ax
+			mov ax, v2
+			add ax, imm
+			mov v2, ax
+			pop ax
+			jno l1
+			pushf
+			inc overflow
+			popf
+
+		l1 : jnc l2
+			 pushf
+			 inc carry
+			 popf
+		 l2 :
+	}
+
+	// oduzimanje destinacije i prethodnog zbira i provera za oveflow i carry
+	__asm
+	{
+		push ax
+			mov ax, v1 
+			sub ax, v2
+			mov v1, ax
+			pop ax
+			jno l11
+			pushf
+			inc overflow
+			popf
+
+		l11 : jnc l22 // provera za carry
+			  pushf
+			  inc carry
+			  popf
+		  l22 :
+	}
+
+#else
 #ifdef __gnu_linux__
 
 	__asm__
-	(
+		(
 		"mov ax, %5\n"
 		"add ax, %4\n"
 		"mov %0, ax\n"
@@ -119,22 +203,22 @@ void sub()
 		"inc al\n"
 		"mov %2, al\n"
 		"popf\n"
-	"l1s : jnc l2s\n"
-		 "pushf\n"
-		 "mov al, %1\n"
-		 "inc al\n"
-		 "mov %1, al\n"
-		 "popf\n"
-	 "l2s:\n"
-	 :"=m"(v2), "=m"(carry), "=m"(overflow)
-	 :"m"(v1), "m"(imm), "m"(v2)
-	 :"ax", "al"
-	);
+		"l1s : jnc l2s\n"
+		"pushf\n"
+		"mov al, %1\n"
+		"inc al\n"
+		"mov %1, al\n"
+		"popf\n"
+		"l2s:\n"
+		:"=m"(v2), "=m"(carry), "=m"(overflow)
+		: "m"(v1), "m"(imm), "m"(v2)
+		: "ax", "al"
+		);
 
 	// oduzimanje destinacije i prethodnog zbira i provera za oveflow i carry
 
 	__asm__
-	(
+		(
 		"mov ax, %3\n"
 		"sub ax, %4\n"
 		"mov %0, ax\n"
@@ -144,18 +228,19 @@ void sub()
 		"inc al\n"
 		"mov %2, al\n"
 		"popf\n"
-	"l11s: jnc l22s\n"
+		"l11s: jnc l22s\n"
 		"pushf\n"
-		 "mov al, %1\n"
-		 "inc al\n"
-		 "mov %1, al\n"
+		"mov al, %1\n"
+		"inc al\n"
+		"mov %1, al\n"
 		"popf\n"
-	"l22s:\n"
-	:"=m"(v1), "=m"(carry), "=m"(overflow)
-	:"m"(v1), "m"(v2)
-	:"ax", "al"
-	);
+		"l22s:\n"
+		:"=m"(v1), "=m"(carry), "=m"(overflow)
+		: "m"(v1), "m"(v2)
+		: "ax", "al"
+		);
 
+#endif
 #endif
 
 	cpu.r[dst] = v1;
