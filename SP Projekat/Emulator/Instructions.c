@@ -65,7 +65,7 @@ void add()
 	:"ax", "al"
 	);
 
-#ENDIF
+#endif
 
 	cpu.r[dst] = v1;
 
