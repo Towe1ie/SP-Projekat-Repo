@@ -15,46 +15,57 @@ void add()
 
 	WORD v1 = cpu.r[dst];
 	WORD v2 = cpu.r[src];
-	WORD res = 0;
 
+#ifdef __gnu_linux__
 	// sabiranje druga dva sabirka i provera za overflow i carry
-	__asm
-	{
-		push ax
-		mov ax, v2
-		add ax, imm
-		mov v2, ax
-		pop ax
-		jno l1
-		pushf
-		inc overflow
-		popf
-	l1 : jnc l2
-		 pushf
-		 inc carry
-		 popf
-	 l2 :
-	}
+	__asm__
+	(
+		"mov ax, %5\n"
+		"add ax, %4\n"
+		"mov %0, ax\n"
+		"jno l1\n"
+		"pushf\n"
+		"mov al, %2\n"
+		"inc al\n"
+		"mov %2, al\n"
+		"popf\n"
+	"l1 : jnc l2\n"
+		 "pushf\n"
+		 "mov al, %1\n"
+		 "inc al\n"
+		 "mov %1, al\n"
+		 "popf\n"
+	 "l2:\n"
+	 :"=m"(v2), "=m"(carry), "=m"(overflow)
+	 :"m"(v1), "m"(imm), "m"(v2)
+	 : "ax", "al"
+	);
 
 	// sabiranje destinacije i prethodnog zbira i provera za oveflow i carry
-	__asm
-	{
-		push ax
-		mov ax, v1
-		add ax, v2
-		mov v1, ax
-		pop ax
-		jno l11
-		pushf
-		inc overflow
-		popf
-		
-	l11: jnc l22
-		pushf
-		inc carry
-		popf
-	l22:
-	}
+	__asm__
+	(
+		"mov ax, %3\n"
+		"add ax, %4\n"
+		"mov %0, ax\n"
+		"jno l11\n"
+		"pushf\n"
+		"mov al, %2\n"
+		"inc al\n"
+		"mov %2, al\n"
+		"popf\n"
+	"l11: jnc l22\n"
+		"pushf\n"
+		 "mov al, %1\n"
+		 "inc al\n"
+		 "mov %1, al\n"
+		"popf\n"
+	"l22:\n"
+	:"=m"(v1), "=m"(carry), "=m"(overflow)
+	:"m"(v1), "m"(v2)
+	:"ax", "al"
+	);
+
+#ENDIF
 
 	cpu.r[dst] = v1;
 
@@ -62,12 +73,23 @@ void add()
 
 	if (cpu.r[dst] == 0)
 		SetFlag(Z);
+	else
+		ResetFlag(Z);
+
 	if (cpu.r[dst] < 0)
 		SetFlag(N);
+	else
+		ResetFlag(N);
+
 	if (carry)
 		SetFlag(C);
+	else
+		ResetFlag(C);
+
 	if (overflow)
 		SetFlag(O);
+	else
+		ResetFlag(O);
 
 
 	if (disassembly)
@@ -83,48 +105,58 @@ void sub()
 
 	WORD v1 = cpu.r[dst];
 	WORD v2 = cpu.r[src];
-	WORD res = 0;
 
-	
-	// oduzimanje druga dva sabirka i provera za overflow i carry
-	__asm
-	{
-		push ax
-			mov ax, v2
-			add ax, imm
-			mov v2, ax
-			pop ax
-			jno l1
-			pushf
-			inc overflow
-			popf
+#ifdef __gnu_linux__
 
-		l1 : jnc l2
-			 pushf
-			 inc carry
-			 popf
-		 l2 :
-	}
+	__asm__
+	(
+		"mov ax, %5\n"
+		"add ax, %4\n"
+		"mov %0, ax\n"
+		"jno l1s\n"
+		"pushf\n"
+		"mov al, %2\n"
+		"inc al\n"
+		"mov %2, al\n"
+		"popf\n"
+	"l1s : jnc l2s\n"
+		 "pushf\n"
+		 "mov al, %1\n"
+		 "inc al\n"
+		 "mov %1, al\n"
+		 "popf\n"
+	 "l2s:\n"
+	 :"=m"(v2), "=m"(carry), "=m"(overflow)
+	 :"m"(v1), "m"(imm), "m"(v2)
+	 :"ax", "al"
+	);
 
 	// oduzimanje destinacije i prethodnog zbira i provera za oveflow i carry
-	__asm
-	{
-		push ax
-		mov ax, v1 
-		sub ax, v2
-		mov v1, ax
-		pop ax
-		jno l11
-		pushf
-		inc overflow
-		popf
-		
-	l11 : jnc l22 // provera za carry
-		 pushf
-		 inc carry
-		 popf
-	l22 :
-	}
+
+	__asm__
+	(
+		"mov ax, %3\n"
+		"sub ax, %4\n"
+		"mov %0, ax\n"
+		"jno l11s\n"
+		"pushf\n"
+		"mov al, %2\n"
+		"inc al\n"
+		"mov %2, al\n"
+		"popf\n"
+	"l11s: jnc l22s\n"
+		"pushf\n"
+		 "mov al, %1\n"
+		 "inc al\n"
+		 "mov %1, al\n"
+		"popf\n"
+	"l22s:\n"
+	:"=m"(v1), "=m"(carry), "=m"(overflow)
+	:"m"(v1), "m"(v2)
+	:"ax", "al"
+	);
+
+#endif
 
 	cpu.r[dst] = v1;
 
@@ -132,13 +164,23 @@ void sub()
 
 	if (cpu.r[dst] == 0)
 		SetFlag(Z);
+	else
+		ResetFlag(Z);
+
 	if (cpu.r[dst] < 0)
 		SetFlag(N);
+	else
+		ResetFlag(N);
+
 	if (carry)
 		SetFlag(C);
+	else
+		ResetFlag(C);
+
 	if (overflow)
 		SetFlag(O);
-
+	else
+		ResetFlag(O);
 	if (disassembly)
 		printf("SUB R[%d], R[%d], %d\n", dst, src, imm);
 }
@@ -170,8 +212,13 @@ void div()
 
 	if (cpu.r[dst] == 0)
 		SetFlag(Z);
+	else
+		ResetFlag(Z);
+
 	if (cpu.r[dst] < 0)
 		SetFlag(N);
+	else
+		ResetFlag(N);
 
 	if (disassembly)
 		printf("DIV R[%d], R[%d], %d\n", dst, src, imm);

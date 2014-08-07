@@ -61,13 +61,14 @@ void Emulate()
 ADDR LoadProgram(char *fileName)
 {
 	FILE *file = NULL;
-	errno_t error = fopen_s(&file, fileName, "rb");
+	//int error = fopen_s(&file, fileName, "rb");
+	file = fopen(fileName, "rb");
 
 	ADDR entryAddr = 0;
 
 	if (file == NULL)
 	{
-		printf("Error in opening file! Error code: %d\n", error);
+		printf("Error in opening file! Error code:\n");
 		return -1;
 	}
 

@@ -25,9 +25,10 @@ WORD ExtSgn(UBYTE byte, int numBits)
 {
 	UBYTE b = GetInfoFromByte(numBits - 1, 0, byte);
 	WORD w = b;
+	unsigned int i = 0;
 
 	if (w & (1 << (numBits - 1)))
-		for (unsigned int i = numBits; i < sizeof(WORD) * 8; ++i)
+		for (i = numBits; i < sizeof(WORD) * 8; ++i)
 			w |= (1 << i);
 
 	return w;
