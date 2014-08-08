@@ -46,6 +46,21 @@ void Emulate()
 		case 3:
 			div();
 			break;
+		case 4:
+			cmp();
+			break;
+		case 5:
+			and();
+			break;
+		case 6:
+			or();
+			break;
+		case 7:
+			not();
+			break;
+		case 8:
+			test();
+			break;
 		}
 
 		z = GetFlag(Z);
@@ -80,7 +95,7 @@ ADDR LoadProgram(char *fileName)
 		return -1;
 	}
 
-	fread(memory + entryAddr, sizeof(BYTE), 12, file);
+	fread(memory + entryAddr, sizeof(BYTE), 14, file);
 
 	return entryAddr;
 }

@@ -8,4 +8,9 @@ void div();
 
 void cmp();
 
+void and();
+void or();
+void not();
+void test();
+
 #endif

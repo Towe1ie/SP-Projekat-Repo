@@ -23,16 +23,21 @@ else\
 	ResetFlag(O);\
 
 unsigned char disassembly = 1;
+WORD dst, src, imm, v1, v2; // ovo sam imao u skoro svakoj instrukciji, pa da ne bih stalno alocirao prostor na steku
+unsigned char c, o, n, z;
+
+int p = 0;
 
 void add()
 {
-	unsigned char c = 0, o = 0, n = 0, z = 0;
-	UBYTE dst = GetInfoFromByte(2, 0, ir1);
-	UBYTE src = GetInfoFromByte(7, 5, ir0);
-	WORD imm = ExtSgn(ir0, 5);
+	c = 0, o = 0, n = 0, z = 0;
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	imm = ExtSgn(ir0, 5);
 
-	WORD v1 = cpu.r[dst];
-	WORD v2 = cpu.r[src];
+
+	v1 = cpu.r[dst];
+	v2 = cpu.r[src];
 
 #ifdef _WIN32
 	// sabiranje druga dva sabirka i provera za overflow i carry
@@ -56,7 +61,7 @@ void add()
 		push ax;
 		mov ax, v1;
 		add ax, v2;
-		mov v1, ax;
+		mov v1, ax
 		pop ax;
 		jno l11;
 		mov o, 1;
@@ -128,17 +133,19 @@ void add()
 
 	if (disassembly)
 		printf("ADD R[%d], R[%d], %d\n", dst, src, imm);
+
+
 }
 
 void sub()
 {
-	unsigned char c = 0, n = 0, z = 0, o = 0;
-	UBYTE dst = GetInfoFromByte(2, 0, ir1);
-	UBYTE src = GetInfoFromByte(7, 5, ir0);
-	WORD imm = ExtSgn(ir0, 5);
+	c = 0, n = 0, z = 0, o = 0;
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	imm = ExtSgn(ir0, 5);
 
-	WORD v1 = cpu.r[dst];
-	WORD v2 = cpu.r[src];
+	v1 = cpu.r[dst];
+	v2 = cpu.r[src];
 
 #ifdef _WIN32
 	// oduzimanje druga dva sabirka i provera za overflow i carry
@@ -243,9 +250,9 @@ void sub()
 
 void mul()
 {
-	UBYTE dst = GetInfoFromByte(2, 0, ir1);
-	UBYTE src = GetInfoFromByte(7, 5, ir0);
-	WORD imm = ExtSgn(ir0, 5);
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	imm = ExtSgn(ir0, 5);
 
 	cpu.r[dst] *= cpu.r[src] * imm;
 
@@ -260,9 +267,9 @@ void mul()
 
 void div()
 {
-	UBYTE dst = GetInfoFromByte(2, 0, ir1);
-	UBYTE src = GetInfoFromByte(7, 5, ir0);
-	WORD imm = ExtSgn(ir0, 5);
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	imm = ExtSgn(ir0, 5);
 
 	cpu.r[dst] /= cpu.r[src] / imm;
 
@@ -282,13 +289,13 @@ void div()
 
 void cmp()
 {
-	unsigned char c = 0, o = 0, n = 0, z = 0;
-	UBYTE dst = GetInfoFromByte(2, 0, ir1);
-	UBYTE src = GetInfoFromByte(7, 5, ir0);
-	WORD imm = ExtSgn(ir0, 5);
+	c = 0, o = 0, n = 0, z = 0;
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	imm = ExtSgn(ir0, 5);
 
-	WORD v1 = cpu.r[dst];
-	WORD v2 = cpu.r[src];
+	v1 = cpu.r[dst];
+	v2 = cpu.r[src];
 
 #ifdef _WIN32
 	__asm
@@ -314,4 +321,144 @@ void cmp()
 
 	if (disassembly)
 		printf("CMP R[%d], R[%d], %d\n", dst, src, imm);
+}
+
+void and()
+{
+	c = 0, n = 0, z = 0, o = 0;
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	v1 = cpu.r[dst];
+	v2 = cpu.r[src];
+
+#ifdef _WIN32
+	__asm
+	{
+		push ax;
+		mov ax, v1;
+		and ax, v2;
+		mov v1, ax;
+		pop ax;
+	jno l1;
+		mov o, 1;
+	l1: jnc l2;
+		mov c, 1;
+	l2: jns l3;
+		mov n, 1;
+	l3: jnz l4;
+		mov z, 1;
+	l4:;
+	}
+#endif
+
+	cpu.r[dst] = v1;
+
+	UPDATE_ALL_FLAGS;
+	
+	if (disassembly)
+		printf("AND R[%d], R[%d]\n", dst, src);
+}
+
+void or()
+{
+	c = 0, n = 0, z = 0, o = 0;
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	v1 = cpu.r[dst];
+	v2 = cpu.r[src];
+
+#ifdef _WIN32
+	__asm
+	{
+		push ax;
+		mov ax, v1;
+		or ax, v2;
+		mov v1, ax;
+		pop ax;
+		jno l1;
+		mov o, 1;
+	l1: jnc l2;
+		mov c, 1;
+	l2: jns l3;
+		mov n, 1;
+	l3: jnz l4;
+		mov z, 1;
+	l4:;
+	}
+#endif
+
+	cpu.r[dst] = v1;
+
+	UPDATE_ALL_FLAGS;
+
+	if (disassembly)
+		printf("OR R[%d], R[%d]\n", dst, src);
+}
+
+void not()
+{
+	c = 0, n = 0, z = 0, o = 0;
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	v1 = cpu.r[src];
+
+#ifdef _WIN32
+	__asm
+	{
+		push ax;
+		mov ax, v1;
+		not ax;
+		mov v1, ax;
+		pop ax;
+		jno l1;
+		mov o, 1;
+	l1: jnc l2;
+		mov c, 1;
+	l2: jns l3;
+		mov n, 1;
+	l3: jnz l4;
+		mov z, 1;
+	l4:;
+	}
+#endif
+
+	cpu.r[dst] = v1;
+
+	UPDATE_ALL_FLAGS;
+
+	if (disassembly)
+		printf("NOT R[%d], R[%d]\n", dst, src);
+}
+
+void test()
+{
+	c = 0, n = 0, z = 0, o = 0;
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	v1 = cpu.r[dst];
+	v2 = cpu.r[src];
+
+#ifdef _WIN32
+	__asm
+	{
+		push ax;
+		mov ax, v1;
+		and ax, v2;
+		pop ax;
+		jno l1;
+		mov o, 1;
+	l1: jnc l2;
+		mov c, 1;
+	l2: jns l3;
+		mov n, 1;
+	l3: jnz l4;
+		mov z, 1;
+	l4:;
+	}
+#endif
+
+	UPDATE_ALL_FLAGS;
+
+	if (disassembly)
+		printf("TEST R[%d], R[%d]\n", dst, src);
 }
