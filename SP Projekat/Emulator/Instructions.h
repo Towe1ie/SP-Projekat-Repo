@@ -6,4 +6,6 @@ void sub();
 void mul();
 void div();
 
+void cmp();
+
 #endif

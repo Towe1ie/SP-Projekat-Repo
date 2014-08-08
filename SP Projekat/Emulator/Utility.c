@@ -41,7 +41,7 @@ void SetFlag(FLAG flag)
 
 void ResetFlag(FLAG flag)
 {
-	cpu.psw &= ((~1) << flag);
+	cpu.psw &= ~(1 << flag);
 }
 
 BIT GetFlag(FLAG flag)

@@ -4,11 +4,29 @@
 
 #include <stdio.h>
 
+#define UPDATE_ALL_FLAGS 	\
+if (z)\
+	SetFlag(Z);\
+else\
+	ResetFlag(Z);\
+if (n)\
+	SetFlag(N);\
+else\
+	ResetFlag(N);\
+if (c)\
+	SetFlag(C);\
+else\
+	ResetFlag(C);\
+if (o)\
+	SetFlag(O);\
+else\
+	ResetFlag(O);\
+
 unsigned char disassembly = 1;
 
 void add()
 {
-	unsigned char carry = 0, overflow = 0;
+	unsigned char c = 0, o = 0, n = 0, z = 0;
 	UBYTE dst = GetInfoFromByte(2, 0, ir1);
 	UBYTE src = GetInfoFromByte(7, 5, ir0);
 	WORD imm = ExtSgn(ir0, 5);
@@ -20,40 +38,35 @@ void add()
 	// sabiranje druga dva sabirka i provera za overflow i carry
 	__asm
 	{
-		push ax
-			mov ax, v2
-			add ax, imm
-			mov v2, ax
-			pop ax
-			jno l1
-			pushf
-			inc overflow
-			popf
-		l1 : jnc l2
-			 pushf
-			 inc carry
-			 popf
-		 l2 :
+		push ax;
+		mov ax, v2;
+		add ax, imm;
+		mov v2, ax;
+		pop ax;
+		jno l1;
+		mov o, 1;
+	l1: jnc l2;
+		mov c, 1
+		l2:;
 	}
 
 	// sabiranje destinacije i prethodnog zbira i provera za oveflow i carry
 	__asm
 	{
-		push ax
-			mov ax, v1
-			add ax, v2
-			mov v1, ax
-			pop ax
-			jno l11
-			pushf
-			inc overflow
-			popf
-
-		l11: jnc l22
-			 pushf
-			 inc carry
-			 popf
-		 l22:
+		push ax;
+		mov ax, v1;
+		add ax, v2;
+		mov v1, ax;
+		pop ax;
+		jno l11;
+		mov o, 1;
+	l11: jnc l22;
+		mov c, 1;
+	l22: jns l33;
+		mov n, 1;
+	l33: jnz l44;
+		mov z, 1;
+	l44:;
 	}
 
 #else
@@ -111,28 +124,7 @@ void add()
 
 	cpu.r[dst] = v1;
 
-	// **** Setovanje flegova ****
-
-	if (cpu.r[dst] == 0)
-		SetFlag(Z);
-	else
-		ResetFlag(Z);
-
-	if (cpu.r[dst] < 0)
-		SetFlag(N);
-	else
-		ResetFlag(N);
-
-	if (carry)
-		SetFlag(C);
-	else
-		ResetFlag(C);
-
-	if (overflow)
-		SetFlag(O);
-	else
-		ResetFlag(O);
-
+	UPDATE_ALL_FLAGS;
 
 	if (disassembly)
 		printf("ADD R[%d], R[%d], %d\n", dst, src, imm);
@@ -140,7 +132,7 @@ void add()
 
 void sub()
 {
-	unsigned char carry = 0, overflow = 0;
+	unsigned char c = 0, n = 0, z = 0, o = 0;
 	UBYTE dst = GetInfoFromByte(2, 0, ir1);
 	UBYTE src = GetInfoFromByte(7, 5, ir0);
 	WORD imm = ExtSgn(ir0, 5);
@@ -150,43 +142,39 @@ void sub()
 
 #ifdef _WIN32
 	// oduzimanje druga dva sabirka i provera za overflow i carry
+
 	__asm
 	{
-		push ax
-			mov ax, v2
-			add ax, imm
-			mov v2, ax
-			pop ax
-			jno l1
-			pushf
-			inc overflow
-			popf
-
-		l1 : jnc l2
-			 pushf
-			 inc carry
-			 popf
-		 l2 :
+		push ax;
+		mov ax, v2;
+		add ax, imm;
+		mov v2, ax;
+		pop ax;
+		jno l1;
+		mov o, 1;
+	l1: jnc l2;
+		mov c, 1
+		l2:;
 	}
 
 	// oduzimanje destinacije i prethodnog zbira i provera za oveflow i carry
+
 	__asm
 	{
-		push ax
-			mov ax, v1 
-			sub ax, v2
-			mov v1, ax
-			pop ax
-			jno l11
-			pushf
-			inc overflow
-			popf
-
-		l11 : jnc l22 // provera za carry
-			  pushf
-			  inc carry
-			  popf
-		  l22 :
+		push ax;
+		mov ax, v1;
+		sub ax, v2;
+		mov v1, ax;
+		pop ax;
+		jno l11;
+		mov o, 1;
+	l11: jnc l22;
+		mov c, 1;
+	l22: jns l33;
+		mov n, 1;
+	l33: jnz l44;
+		mov z, 1;
+	l44:;
 	}
 
 #else
@@ -247,25 +235,8 @@ void sub()
 
 	// **** Setovanje flegova ****
 
-	if (cpu.r[dst] == 0)
-		SetFlag(Z);
-	else
-		ResetFlag(Z);
+	UPDATE_ALL_FLAGS;
 
-	if (cpu.r[dst] < 0)
-		SetFlag(N);
-	else
-		ResetFlag(N);
-
-	if (carry)
-		SetFlag(C);
-	else
-		ResetFlag(C);
-
-	if (overflow)
-		SetFlag(O);
-	else
-		ResetFlag(O);
 	if (disassembly)
 		printf("SUB R[%d], R[%d], %d\n", dst, src, imm);
 }
@@ -307,4 +278,40 @@ void div()
 
 	if (disassembly)
 		printf("DIV R[%d], R[%d], %d\n", dst, src, imm);
+}
+
+void cmp()
+{
+	unsigned char c = 0, o = 0, n = 0, z = 0;
+	UBYTE dst = GetInfoFromByte(2, 0, ir1);
+	UBYTE src = GetInfoFromByte(7, 5, ir0);
+	WORD imm = ExtSgn(ir0, 5);
+
+	WORD v1 = cpu.r[dst];
+	WORD v2 = cpu.r[src];
+
+#ifdef _WIN32
+	__asm
+	{
+		push ax;
+		mov ax, imm;
+		add ax, v2;
+		cmp v1, ax;
+		pop ax;
+		jno l1;
+		mov o, 1;
+	l1: jnc l2;
+		mov c, 1;
+	l2: jns l3;
+		mov n, 1;
+	l3: jnz l4;
+		mov z, 1;
+	l4:;
+	}
+#endif // _WIN32
+
+	UPDATE_ALL_FLAGS;
+
+	if (disassembly)
+		printf("CMP R[%d], R[%d], %d\n", dst, src, imm);
 }
