@@ -51,3 +51,20 @@ BIT GetFlag(FLAG flag)
 	else
 		return ZERO;
 }
+
+UBYTE GetLowerByte(UWORD word)
+{
+	unsigned char i = 0;
+	UBYTE b = 0;
+	UWORD mask = 1;
+
+	for (i = 0; i < 8; i++)
+		b += ((mask << i) & word); // nisam siguran kako radi |= za razlicite velicine (byte, word) pa sam stavio +=
+
+	return b;
+}
+
+UBYTE GetHigherByte(UWORD word)
+{
+	return GetLowerByte(word >> 8);
+}

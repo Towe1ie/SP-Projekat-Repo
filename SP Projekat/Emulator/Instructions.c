@@ -462,3 +462,50 @@ void test()
 	if (disassembly)
 		printf("TEST R[%d], R[%d]\n", dst, src);
 }
+
+char ldr()
+{
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	imm = ExtSgn(ir0, 5);
+
+	REG srcReg = (src == 7) ? cpu.pc : cpu.r[src];
+
+	ADDR addr = GetPA(srcReg + imm);
+
+	if (addr == -1)
+		return 0;
+
+	cpu.r[dst] = 0;
+	cpu.r[dst] |= memory[addr];
+	cpu.r[dst] |= memory[addr + 1] << sizeof(REG) * 4;
+
+	if (disassembly)
+		(src != 7) ? printf("LDR R[%d], R[%d], %d\n", dst, src, imm) : printf("LDR R[%d], PC, %d\n", dst, imm);
+
+	return 1;
+}
+
+char str()
+{
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	imm = ExtSgn(ir0, 5);
+
+	REG srcReg = (src == 7) ? cpu.pc : cpu.r[src];
+
+	ADDR addr = GetPA(cpu.r[dst] + imm);
+
+	if (addr == -1)
+		return 0;
+
+	memory[addr] = 0;
+	memory[addr + 1] = 0;
+	memory[addr] = GetLowerByte(srcReg);
+	memory[addr + 1] = GetHigherByte(srcReg);
+
+	if (disassembly)
+		(src != 7) ? printf("STR R[%d], R[%d], %d\n", dst, src, imm) : printf("STR R[%d], PC, %d\n", dst, imm);
+
+	return 1;
+}

@@ -8,6 +8,19 @@ MEM memory;
 UBYTE ir0, ir1;
 
 char work = 1;
+char prekid = 0;
+unsigned char brPrekid = -1;
+
+ADDR GetPA(VADDR vaddr)
+{
+	if (!GetFlag(VM))
+		return vaddr;
+	else
+	{
+		prekid = 1;
+		return -1;
+	}
+}
 
 void Emulate()
 {
@@ -26,6 +39,8 @@ void Emulate()
 
 	while (work)
 	{
+		char noPageFault = 1;
+
 		ir1 = memory[cpu.pc];
 		ir0 = memory[cpu.pc + 1];
 		cpu.pc += 2;
@@ -61,6 +76,24 @@ void Emulate()
 		case 8:
 			test();
 			break;
+		case 9:
+			noPageFault = ldr();
+			if (!noPageFault)
+			{
+				prekid = 1;
+				brPrekid = 1;
+				goto PREKID;
+			}
+			break;
+		case 10:
+			noPageFault = str();
+			if (!noPageFault)
+			{
+				prekid = 1;
+				brPrekid = 1;
+				goto PREKID;
+			}
+			break;
 		}
 
 		z = GetFlag(Z);
@@ -69,6 +102,17 @@ void Emulate()
 		o = GetFlag(O);
 
 		printf("Flags N Z O C\n      %d %d %d %d\n", n, z, o, c);
+
+	PREKID:
+		if (prekid)
+		{
+			if (brPrekid == 1)
+				cpu.pc -= 2;
+
+			// save context
+
+			cpu.pc = brPrekid << 1;
+		}
 	}
 }
 
@@ -85,7 +129,7 @@ ADDR LoadProgram(char *fileName)
 #endif
 #endif
 
-	
+
 
 	ADDR entryAddr = 0;
 
@@ -95,7 +139,7 @@ ADDR LoadProgram(char *fileName)
 		return -1;
 	}
 
-	fread(memory + entryAddr, sizeof(BYTE), 14, file);
+	fread(memory + entryAddr, sizeof(BYTE), 18, file);
 
 	return entryAddr;
 }

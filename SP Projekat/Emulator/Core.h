@@ -9,6 +9,7 @@ typedef char BYTE;
 typedef unsigned char UBYTE;
 
 typedef unsigned short ADDR;
+typedef unsigned short VADDR;
 
 typedef short REG;
 
@@ -29,8 +30,10 @@ extern MEM memory;
 extern UBYTE ir0, ir1;
 
 extern char work;
+extern char prekid;
 
 void Emulate();
+ADDR GetPA(VADDR vaddr);
 ADDR LoadProgram(char *fileName);
 
 #endif

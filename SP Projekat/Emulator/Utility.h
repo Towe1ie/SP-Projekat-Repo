@@ -14,4 +14,7 @@ void SetFlag(FLAG flag);
 void ResetFlag(FLAG flag);
 BIT GetFlag(FLAG flag);
 
+UBYTE GetLowerByte(UWORD word);
+UBYTE GetHigherByte(UWORD word);
+
 #endif

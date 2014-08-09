@@ -13,4 +13,7 @@ void or();
 void not();
 void test();
 
+char ldr();
+char str();
+
 #endif
