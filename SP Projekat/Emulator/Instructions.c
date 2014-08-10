@@ -568,3 +568,102 @@ char _str()
 
 	return 1;
 }
+
+char _je()
+{
+	if (GetFlag(Z))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _jne()
+{
+	if (!GetFlag(Z))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _jge()
+{
+	if (!GetFlag(N) && GetFlag(Z))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _jg()
+{
+	if (!GetFlag(N))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _jle()
+{
+	if (GetFlag(N) && GetFlag(Z))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _jl()
+{
+	if (GetFlag(N))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _jp()
+{
+	if (!GetFlag(N))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _jn()
+{
+	if (GetFlag(N))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _jo()
+{
+	if (GetFlag(O))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _jno()
+{
+	if (!GetFlag(O))
+		return JmpFunc();
+
+	return 1;
+}
+
+char _call()
+{
+	ADDR addr = GetPA(cpu.sp++);
+	if (addr == 0)
+		return 0;
+
+	memory[addr] = GetLowerByte(cpu.pc);
+	addr = GetPA(cpu.sp++);
+	if (addr == 0)
+	{
+		cpu.sp -= 2;
+		return 0;
+	}
+
+	memory[addr] = GetHigherByte(cpu.pc);
+
+	return JmpFunc();
+}

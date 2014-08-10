@@ -3,6 +3,14 @@
 
 #define MEMCAP 0x8000
 
+#define CHECK_PAGE_FAULT \
+if (!noPageFault)\
+{\
+	prekid = 1;\
+	brPrekid = 1;\
+	goto PREKID;\
+}\
+
 typedef short WORD;
 typedef unsigned short UWORD;
 typedef char BYTE;
@@ -31,6 +39,7 @@ extern UBYTE ir0, ir1;
 
 extern char work;
 extern char prekid;
+extern unsigned char brPrekid;
 
 void Emulate();
 ADDR GetPA(VADDR vaddr);

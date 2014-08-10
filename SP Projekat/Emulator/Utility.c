@@ -21,6 +21,29 @@ UBYTE GetInfoFromByte(unsigned int hightBit, unsigned int lowBit, UBYTE byte)
 	return byte;
 }
 
+UWORD GetInfoFromWord(unsigned int highBit, unsigned int lowBit, UWORD word)
+{
+	unsigned short mask = 0xFFFE;
+	mask <<= (highBit - lowBit);
+	mask = ~mask;
+	mask <<= lowBit;
+
+	word &= mask;
+	word >>= lowBit;
+
+	return word;
+}
+
+UWORD MergeBytes(UBYTE high, UBYTE low)
+{
+	UWORD w = high;
+	UWORD w1 = low;
+	w <<= 8;
+	w |= w1;
+
+	return w;
+}
+
 WORD ExtSgn(UBYTE byte, int numBits)
 {
 	UBYTE b = GetInfoFromByte(numBits - 1, 0, byte);
@@ -32,6 +55,19 @@ WORD ExtSgn(UBYTE byte, int numBits)
 			w |= (1 << i);
 
 	return w;
+}
+
+WORD ExtSgnW(WORD word, int numBits)
+{
+	UWORD w = GetInfoFromWord(numBits - 1, 0, word);
+	WORD w1 = w;
+	unsigned int i = 0;
+
+	if (w1 & (1 << (numBits - 1)))
+		for (i = numBits; i < sizeof(WORD) * 8; ++i)
+			w1 |= (1 << i);
+
+	return w1;
 }
 
 void SetFlag(FLAG flag)
@@ -67,4 +103,35 @@ UBYTE GetLowerByte(UWORD word)
 UBYTE GetHigherByte(UWORD word)
 {
 	return GetLowerByte(word >> 8);
+}
+
+char JmpFunc()
+{
+	WORD dst = 0, imm;
+	if (!(ir1 && BIT2))
+	{
+		dst = GetInfoFromWord(9, 7, MergeBytes(ir1, ir0));
+		imm = ExtSgn(ir0, 7);
+
+		cpu.pc = cpu.r[dst] + imm;
+
+	}
+	else
+	{
+		imm = ExtSgnW(MergeBytes(ir1, ir0), 9);
+
+		if (ir1 & BIT1)
+			cpu.pc += imm;
+		else
+		{
+			ADDR addr = GetPA(cpu.pc + imm);
+			
+			if (addr == 0)
+				return 0;
+
+			cpu.pc = memory[addr];
+		}
+	}
+
+	return 1;
 }
