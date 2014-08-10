@@ -1,19 +1,19 @@
 #ifndef _INSTRUCTIONS_H_
 #define _INSTRUCTIONS_H_
 
-void add();
-void sub();
-void mul();
-void div();
+void _add();
+void _sub();
+void _mul();
+void _div();
 
-void cmp();
+void _cmp();
 
-void and();
-void or();
-void not();
-void test();
+void _and();
+void _or();
+void _not();
+void _test();
 
-char ldr();
-char str();
+char _ldr();
+char _str();
 
 #endif

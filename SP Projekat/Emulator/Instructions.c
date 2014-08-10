@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#define UPDATE_ALL_FLAGS 	\
+#define UPDATE_ALL_FLAGS \
 if (z)\
 	SetFlag(Z);\
 else\
@@ -22,13 +22,23 @@ if (o)\
 else\
 	ResetFlag(O);\
 
+#define UPDATE_ZN_FLAGS	\
+if (z)\
+	SetFlag(Z);\
+else\
+	ResetFlag(Z);\
+if (n)\
+	SetFlag(N);\
+else\
+	ResetFlag(N);
+
 unsigned char disassembly = 1;
 WORD dst, src, imm, v1, v2; // ovo sam imao u skoro svakoj instrukciji, pa da ne bih stalno alocirao prostor na steku
 unsigned char c, o, n, z;
 
 int p = 0;
 
-void add()
+void _add()
 {
 	c = 0, o = 0, n = 0, z = 0;
 	dst = GetInfoFromByte(2, 0, ir1);
@@ -82,46 +92,34 @@ void add()
 		"mov ax, %5\n"
 		"add ax, %4\n"
 		"mov %0, ax\n"
-		"jno l1\n"
-		"pushf\n"
-		"mov al, %2\n"
-		"inc al\n"
-		"mov %2, al\n"
-		"popf\n"
-		"l1 : jnc l2\n"
-		"pushf\n"
-		"mov al, %1\n"
-		"inc al\n"
-		"mov %1, al\n"
-		"popf\n"
-		"l2:\n"
-		:"=m"(v2), "=m"(carry), "=m"(overflow)
+		"jno l1add\n"
+		"mov %2, 1\n"
+	"l1add : jnc l2add\n"
+		"mov %1, 1\n"
+	"l2add:\n"
+		:"=m"(v2), "=m"(c), "=m"(o)
 		: "m"(v1), "m"(imm), "m"(v2)
-		: "ax", "al"
+		: "ax"
 		);
 
 	// sabiranje destinacije i prethodnog zbira i provera za oveflow i carry
 	__asm__
 		(
-		"mov ax, %3\n"
-		"add ax, %4\n"
+		"mov ax, %5\n"
+		"add ax, %6\n"
 		"mov %0, ax\n"
-		"jno l11\n"
-		"pushf\n"
-		"mov al, %2\n"
-		"inc al\n"
-		"mov %2, al\n"
-		"popf\n"
-		"l11: jnc l22\n"
-		"pushf\n"
-		"mov al, %1\n"
-		"inc al\n"
-		"mov %1, al\n"
-		"popf\n"
-		"l22:\n"
-		:"=m"(v1), "=m"(carry), "=m"(overflow)
+		"jno l11add\n"
+		"mov %2, 1\n"
+	"l11add: jnc l22add\n"
+		"mov %1, 1\n"
+	"l22add: jns l33add\n"
+		"mov %4, 1\n"
+	"l33add: jnz l44add\n"
+		"mov %3, 1\n"
+	"l44add:\n"
+		:"=m"(v1), "=m"(c), "=m"(o), "=m"(z), "=m"(n)
 		: "m"(v1), "m"(v2)
-		: "ax", "al"
+		: "ax"
 		);
 
 #endif
@@ -137,7 +135,7 @@ void add()
 
 }
 
-void sub()
+void _sub()
 {
 	c = 0, n = 0, z = 0, o = 0;
 	dst = GetInfoFromByte(2, 0, ir1);
@@ -192,47 +190,35 @@ void sub()
 		"mov ax, %5\n"
 		"add ax, %4\n"
 		"mov %0, ax\n"
-		"jno l1s\n"
-		"pushf\n"
-		"mov al, %2\n"
-		"inc al\n"
-		"mov %2, al\n"
-		"popf\n"
-		"l1s : jnc l2s\n"
-		"pushf\n"
-		"mov al, %1\n"
-		"inc al\n"
-		"mov %1, al\n"
-		"popf\n"
-		"l2s:\n"
-		:"=m"(v2), "=m"(carry), "=m"(overflow)
+		"jno l1sub\n"
+		"mov %2, 1\n"
+	"l1sub : jnc l2sub\n"
+		"mov %1, 1\n"
+	"l2sub:\n"
+		:"=m"(v2), "=m"(c), "=m"(o)
 		: "m"(v1), "m"(imm), "m"(v2)
-		: "ax", "al"
+		: "ax"
 		);
 
 	// oduzimanje destinacije i prethodnog zbira i provera za oveflow i carry
 
 	__asm__
 		(
-		"mov ax, %3\n"
-		"sub ax, %4\n"
+		"mov ax, %5\n"
+		"sub ax, %6\n"
 		"mov %0, ax\n"
-		"jno l11s\n"
-		"pushf\n"
-		"mov al, %2\n"
-		"inc al\n"
-		"mov %2, al\n"
-		"popf\n"
-		"l11s: jnc l22s\n"
-		"pushf\n"
-		"mov al, %1\n"
-		"inc al\n"
-		"mov %1, al\n"
-		"popf\n"
-		"l22s:\n"
-		:"=m"(v1), "=m"(carry), "=m"(overflow)
+		"jno l11sub\n"
+		"mov %2, 1\n"
+	"l11sub: jnc l22sub\n"
+		"mov %1, 1\n"
+	"l22sub: jns l33sub\n"
+		"mov %4, 1\n"
+	"l33sub: jnz l44sub\n"
+		"mov %3, 1\n"
+	"l44sub:\n"
+		:"=m"(v1), "=m"(c), "=m"(o), "=m"(z), "=m"(n)
 		: "m"(v1), "m"(v2)
-		: "ax", "al"
+		: "ax"
 		);
 
 #endif
@@ -248,7 +234,7 @@ void sub()
 		printf("SUB R[%d], R[%d], %d\n", dst, src, imm);
 }
 
-void mul()
+void _mul()
 {
 	dst = GetInfoFromByte(2, 0, ir1);
 	src = GetInfoFromByte(7, 5, ir0);
@@ -265,7 +251,7 @@ void mul()
 		printf("MUL R[%d], R[%d], %d\n", dst, src, imm);
 }
 
-void div()
+void _div()
 {
 	dst = GetInfoFromByte(2, 0, ir1);
 	src = GetInfoFromByte(7, 5, ir0);
@@ -287,7 +273,7 @@ void div()
 		printf("DIV R[%d], R[%d], %d\n", dst, src, imm);
 }
 
-void cmp()
+void _cmp()
 {
 	c = 0, o = 0, n = 0, z = 0;
 	dst = GetInfoFromByte(2, 0, ir1);
@@ -315,7 +301,28 @@ void cmp()
 		mov z, 1;
 	l4:;
 	}
-#endif // _WIN32
+#else // _WIN32
+#ifdef __gnu_linux__
+	__asm__
+	(
+		"mov ax, %4\n"
+		"add ax, %5\n"
+		"cmp %6, ax\n"
+		"jno l1cmp\n"
+		"mov %1, 1\n"
+	"l1cmp: jnc l2cmp\n"
+		"mov %0, 1\n"
+	"l2cmp: jns l3cmp\n"
+		"mov %3, 1\n"
+	"l3cmp: jnz l4cmp\n"
+		"mov %2, 1\n"
+	"l4cmp:\n"
+	:"=m"(c), "=m"(o), "=m"(z), "=m"(n)
+	:"m"(imm), "m"(v2), "m"(v1)
+	:"ax"
+	);
+#endif // __gnu_linux__
+#endif
 
 	UPDATE_ALL_FLAGS;
 
@@ -323,7 +330,7 @@ void cmp()
 		printf("CMP R[%d], R[%d], %d\n", dst, src, imm);
 }
 
-void and()
+void _and()
 {
 	c = 0, n = 0, z = 0, o = 0;
 	dst = GetInfoFromByte(2, 0, ir1);
@@ -339,27 +346,41 @@ void and()
 		and ax, v2;
 		mov v1, ax;
 		pop ax;
-	jno l1;
-		mov o, 1;
-	l1: jnc l2;
-		mov c, 1;
-	l2: jns l3;
+		jns l1;
 		mov n, 1;
-	l3: jnz l4;
+	l1: jnz l2;
 		mov z, 1;
-	l4:;
+	l2:;
 	}
+#else
+#ifdef __gnu_linux__
+		__asm__
+		(
+		"mov ax, %3\n"
+		"mov bx, %4\n"
+		"and ax, bx\n"
+		"mov %0, ax\n"
+		"jns l1annd\n"
+		"mov %2, 1\n"
+	"l1annd: jnz l2annd\n"
+		"mov %1, 1\n"
+	"l2annd:\n"
+		:"=m"(v1), "=m"(z), "=m"(n)
+		: "m"(v1), "m"(v2)
+		: "ax", "bx"
+		);
+#endif
 #endif
 
 	cpu.r[dst] = v1;
 
-	UPDATE_ALL_FLAGS;
+	UPDATE_ZN_FLAGS;
 	
 	if (disassembly)
 		printf("AND R[%d], R[%d]\n", dst, src);
 }
 
-void or()
+void _or()
 {
 	c = 0, n = 0, z = 0, o = 0;
 	dst = GetInfoFromByte(2, 0, ir1);
@@ -375,27 +396,40 @@ void or()
 		or ax, v2;
 		mov v1, ax;
 		pop ax;
-		jno l1;
-		mov o, 1;
-	l1: jnc l2;
-		mov c, 1;
-	l2: jns l3;
+		jns l1;
 		mov n, 1;
-	l3: jnz l4;
+	l1: jnz l2;
 		mov z, 1;
-	l4:;
+	l2:;
 	}
+#else
+#ifdef __gnu_linux__
+		__asm__
+		(
+		"mov ax, %3\n"
+		"or ax, %4\n"
+		"mov %0, ax\n"
+		"jns l1or\n"
+		"mov %2, 1\n"
+	"l1or: jnz l2or\n"
+		"mov %1, 1\n"
+	"l2or:\n"
+		:"=m"(v1), "=m"(z), "=m"(n)
+		: "m"(v1), "m"(v2)
+		: "ax"
+		);
+#endif
 #endif
 
 	cpu.r[dst] = v1;
 
-	UPDATE_ALL_FLAGS;
+	UPDATE_ZN_FLAGS;
 
 	if (disassembly)
 		printf("OR R[%d], R[%d]\n", dst, src);
 }
 
-void not()
+void _not()
 {
 	c = 0, n = 0, z = 0, o = 0;
 	dst = GetInfoFromByte(2, 0, ir1);
@@ -410,27 +444,40 @@ void not()
 		not ax;
 		mov v1, ax;
 		pop ax;
-		jno l1;
-		mov o, 1;
-	l1: jnc l2;
-		mov c, 1;
-	l2: jns l3;
+		jns l1;
 		mov n, 1;
-	l3: jnz l4;
+	l1: jnz l2;
 		mov z, 1;
-	l4:;
+	l2:;
 	}
+#else
+#ifdef __gnu_linux__
+		__asm__
+		(
+		"mov ax, %3\n"
+		"not ax\n"
+		"mov %0, ax\n"
+		"jns l1not\n"
+		"mov %2, 1\n"
+	"l1not: jnz l2not\n"
+		"mov %1, 1\n"
+	"l2not:\n"
+		:"=m"(v1), "=m"(z), "=m"(n)
+		: "m"(v1)
+		: "ax"
+		);
+#endif
 #endif
 
 	cpu.r[dst] = v1;
 
-	UPDATE_ALL_FLAGS;
+	UPDATE_ZN_FLAGS;
 
 	if (disassembly)
 		printf("NOT R[%d], R[%d]\n", dst, src);
 }
 
-void test()
+void _test()
 {
 	c = 0, n = 0, z = 0, o = 0;
 	dst = GetInfoFromByte(2, 0, ir1);
@@ -445,25 +492,37 @@ void test()
 		mov ax, v1;
 		and ax, v2;
 		pop ax;
-		jno l1;
-		mov o, 1;
-	l1: jnc l2;
-		mov c, 1;
-	l2: jns l3;
+		jns l1;
 		mov n, 1;
-	l3: jnz l4;
+	l1: jnz l2;
 		mov z, 1;
-	l4:;
+	l2:;
 	}
+#else
+#ifdef __gnu_linux__
+		__asm__
+		(
+		"mov ax, %2\n"
+		"and ax, %3\n"
+		"jns l1test\n"
+		"mov %1, 1\n"
+	"l1test: jnz l2test\n"
+		"mov %0, 1\n"
+	"l2test:\n"
+		:"=m"(z), "=m"(n)
+		: "m"(v1), "m"(v2)
+		: "ax"
+		);
+#endif
 #endif
 
-	UPDATE_ALL_FLAGS;
+	UPDATE_ZN_FLAGS;
 
 	if (disassembly)
 		printf("TEST R[%d], R[%d]\n", dst, src);
 }
 
-char ldr()
+char _ldr()
 {
 	dst = GetInfoFromByte(2, 0, ir1);
 	src = GetInfoFromByte(7, 5, ir0);
@@ -486,7 +545,7 @@ char ldr()
 	return 1;
 }
 
-char str()
+char _str()
 {
 	dst = GetInfoFromByte(2, 0, ir1);
 	src = GetInfoFromByte(7, 5, ir0);

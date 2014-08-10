@@ -50,34 +50,34 @@ void Emulate()
 		switch (opCode)
 		{
 		case 0:
-			add();
+			_add();
 			break;
 		case 1:
-			sub();
+			_sub();
 			break;
 		case 2:
-			mul();
+			_mul();
 			break;
 		case 3:
-			div();
+			_div();
 			break;
 		case 4:
-			cmp();
+			_cmp();
 			break;
 		case 5:
-			and();
+			_and();
 			break;
 		case 6:
-			or();
+			_or();
 			break;
 		case 7:
-			not();
+			_not();
 			break;
 		case 8:
-			test();
+			_test();
 			break;
 		case 9:
-			noPageFault = ldr();
+			noPageFault = _ldr();
 			if (!noPageFault)
 			{
 				prekid = 1;
@@ -86,7 +86,7 @@ void Emulate()
 			}
 			break;
 		case 10:
-			noPageFault = str();
+			noPageFault = _str();
 			if (!noPageFault)
 			{
 				prekid = 1;
