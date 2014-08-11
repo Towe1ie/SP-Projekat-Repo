@@ -18,6 +18,7 @@ ADDR GetPA(VADDR vaddr)
 	else
 	{
 		prekid = 1;
+		brPrekid = 1; //page fault
 		return 0;
 	}
 }
@@ -77,55 +78,55 @@ void Emulate()
 			_test();
 			break;
 		case 9:
-			noPageFault = _ldr();
+			_ldr();
 			CHECK_PAGE_FAULT;
 			break;
 		case 10:
-			noPageFault = _str();
+			_str();
 			CHECK_PAGE_FAULT;
 			break;
 		case 11:
-			noPageFault = _je();
+			_je();
 			CHECK_PAGE_FAULT;
 			break;
 		case 12:
-			noPageFault = _jne();
+			_jne();
 			CHECK_PAGE_FAULT;
 			break;
 		case 13:
-			noPageFault = _jge();
+			_jge();
 			CHECK_PAGE_FAULT;
 			break;
 		case 14:
-			noPageFault = _jg();
+			_jg();
 			CHECK_PAGE_FAULT;
 			break;
 		case 15:
-			noPageFault = _jle();
+			_jle();
 			CHECK_PAGE_FAULT;
 			break;
 		case 16:
-			noPageFault = _jl();
+			_jl();
 			CHECK_PAGE_FAULT;
 			break;
 		case 17:
-			noPageFault = _jp();
+			_jp();
 			CHECK_PAGE_FAULT;
 			break;
 		case 18:
-			noPageFault = _jn();
+			_jn();
 			CHECK_PAGE_FAULT;
 			break;
 		case 19:
-			noPageFault = _jo();
+			_jo();
 			CHECK_PAGE_FAULT;
 			break;
 		case 20:
-			noPageFault = _jno();
+			_jno();
 			CHECK_PAGE_FAULT;
 			break;
 		case 21:
-			noPageFault = _call();
+			_call();
 			CHECK_PAGE_FAULT;
 			break;
 		}

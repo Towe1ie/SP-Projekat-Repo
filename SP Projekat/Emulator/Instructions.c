@@ -522,7 +522,7 @@ void _test()
 		printf("TEST R[%d], R[%d]\n", dst, src);
 }
 
-char _ldr()
+void _ldr()
 {
 	dst = GetInfoFromByte(2, 0, ir1);
 	src = GetInfoFromByte(7, 5, ir0);
@@ -533,7 +533,7 @@ char _ldr()
 	ADDR addr = GetPA(srcReg + imm);
 
 	if (addr == -1)
-		return 0;
+		return;
 
 	cpu.r[dst] = 0;
 	cpu.r[dst] |= memory[addr];
@@ -541,11 +541,9 @@ char _ldr()
 
 	if (disassembly)
 		(src != 7) ? printf("LDR R[%d], R[%d], %d\n", dst, src, imm) : printf("LDR R[%d], PC, %d\n", dst, imm);
-
-	return 1;
 }
 
-char _str()
+void _str()
 {
 	dst = GetInfoFromByte(2, 0, ir1);
 	src = GetInfoFromByte(7, 5, ir0);
@@ -556,7 +554,7 @@ char _str()
 	ADDR addr = GetPA(cpu.r[dst] + imm);
 
 	if (addr == -1)
-		return 0;
+		return;
 
 	memory[addr] = 0;
 	memory[addr + 1] = 0;
@@ -565,75 +563,109 @@ char _str()
 
 	if (disassembly)
 		(src != 7) ? printf("STR R[%d], R[%d], %d\n", dst, src, imm) : printf("STR R[%d], PC, %d\n", dst, imm);
-
-	return 1;
 }
 
-char _je()
+void _je()
 {
-	return JmpFunc("JE", disassembly, GetFlag(Z));
+	JmpFunc("JE", disassembly, GetFlag(Z));
 }
 
-char _jne()
+void _jne()
 {
-	return JmpFunc("JE", disassembly, !GetFlag(Z));
+	JmpFunc("JE", disassembly, !GetFlag(Z));
 }
 
-char _jge()
+void _jge()
 {
-	return JmpFunc("JE", disassembly, !GetFlag(N) && GetFlag(Z));
+	JmpFunc("JE", disassembly, !GetFlag(N) && GetFlag(Z));
 }
 
-char _jg()
+void _jg()
 {
-	return JmpFunc("JE", disassembly, !GetFlag(N));
+	JmpFunc("JE", disassembly, !GetFlag(N));
 }
 
-char _jle()
+void _jle()
 {
-		return JmpFunc("JE", disassembly, GetFlag(N) && GetFlag(Z));
+	JmpFunc("JE", disassembly, GetFlag(N) && GetFlag(Z));
 }
 
-char _jl()
+void _jl()
 {
-	return JmpFunc("JE", disassembly, GetFlag(N));
+	JmpFunc("JE", disassembly, GetFlag(N));
 }
 
-char _jp()
+void _jp()
 {
-	return JmpFunc("JE", disassembly, !GetFlag(N));
+	JmpFunc("JE", disassembly, !GetFlag(N));
 }
 
-char _jn()
+void _jn()
 {
-	return JmpFunc("JE", disassembly, GetFlag(N));
+	JmpFunc("JE", disassembly, GetFlag(N));
 }
 
-char _jo()
+void _jo()
 {
-	return JmpFunc("JE", disassembly, GetFlag(O));
+	JmpFunc("JE", disassembly, GetFlag(O));
 }
 
-char _jno()
+void _jno()
 {
-	return JmpFunc("JE", disassembly, !GetFlag(O));
+	JmpFunc("JE", disassembly, !GetFlag(O));
 }
 
-char _call()
+void _call()
 {
 	ADDR addr = GetPA(cpu.sp++);
 	if (addr == 0)
-		return 0;
+		return;
 
 	memory[addr] = GetLowerByte(cpu.pc);
 	addr = GetPA(cpu.sp++);
 	if (addr == 0)
 	{
 		cpu.sp -= 2;
-		return 0;
+		return;
 	}
 
 	memory[addr] = GetHigherByte(cpu.pc);
 
-	return JmpFunc("JE", disassembly, ONE);
+	JmpFunc("JE", disassembly, ONE);
+}
+
+void _rij()
+{
+	UBYTE type = GetInfoFromByte(2, 1, ir1);
+	WORD imm = ExtSgnW(MergeBytes(ir1, ir0), 8);
+
+	if (type == 1)
+	{
+		ADDR addr = GetPA(cpu.sp - 2);
+		if (addr == 0)
+			return;
+
+		cpu.psw = GetWord(addr);
+		cpu.sp -= 2;
+	}
+
+	if (type == 1 || type == 0)
+	{
+		ADDR addr = GetPA(cpu.sp - 2);
+		if (addr == 0)
+			return;
+
+		cpu.pc = GetWord(addr);
+		cpu.sp -= 2;
+	}
+	else if (type == 2)
+		cpu.pc += imm;
+	else
+	{
+		ADDR addr = GetPA(cpu.pc + imm);
+		if (addr == 0)
+			return;
+
+		cpu.pc = GetWord(addr);
+	}
 }

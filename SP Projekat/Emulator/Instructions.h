@@ -13,19 +13,21 @@ void _or();
 void _not();
 void _test();
 
-char _ldr();
-char _str();
+void _ldr();
+void _str();
 
-char _je();
-char _jne();
-char _jge();
-char _jg();
-char _jle();
-char _jl();
-char _jp();
-char _jn();
-char _jo();
-char _jno();
-char _call();
+void _je();
+void _jne();
+void _jge();
+void _jg();
+void _jle();
+void _jl();
+void _jp();
+void _jn();
+void _jo();
+void _jno();
+void _call();
+
+void _rij(); // ret/iret/jmp
 
 #endif

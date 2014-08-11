@@ -107,7 +107,18 @@ UBYTE GetHigherByte(UWORD word)
 	return GetLowerByte(word >> 8);
 }
 
-char JmpFunc(char* callingFuncName, char disassemble, BIT condition)
+WORD GetWord(ADDR addr)
+{
+	WORD w, w1;
+	w = GetHigherByte(memory[addr+1]);
+	w <<= 8;
+	w1 = GetLowerByte(memory[addr]);
+	w |= w1;
+
+	return w;
+}
+
+void JmpFunc(char* callingFuncName, char disassemble, BIT condition)
 {
 	WORD dst = 0, imm;
 	if (!(ir1 & BIT2))
@@ -138,17 +149,13 @@ char JmpFunc(char* callingFuncName, char disassemble, BIT condition)
 			ADDR addr = GetPA(cpu.pc + imm);
 
 			if (addr == 0)
-				return 0;
+				return;
 
 			if (disassemble)
 				printf("%s [PC, %d]\n", callingFuncName, imm);
 
 			if (condition)
-				cpu.pc = memory[addr];
+				cpu.pc = GetWord(addr);
 		}
 	}
-
-
-
-	return 1;
 }
