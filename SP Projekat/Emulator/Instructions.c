@@ -645,7 +645,7 @@ void _rij()
 		if (addr == 0)
 			return;
 
-		cpu.psw = ReadWord(addr);
+		cpu.psw = ReadWord(addr, memory);
 		cpu.sp -= 2;
 	}
 
@@ -655,7 +655,7 @@ void _rij()
 		if (addr == 0)
 			return;
 
-		cpu.pc = ReadWord(addr);
+		cpu.pc = ReadWord(addr, memory);
 		cpu.sp -= 2;
 	}
 	else if (type == 2)
@@ -666,11 +666,11 @@ void _rij()
 		if (addr == 0)
 			return;
 
-		cpu.pc = ReadWord(addr);
+		cpu.pc = ReadWord(addr, memory);
 	}
 
 	if (disassembly)
-		printf("RET/IRET/JMP %d, %d", type, imm);
+		printf("RET/IRET/JMP %d, %d\n", type, imm);
 }
 
 void _push()
@@ -689,7 +689,7 @@ void _push()
 	else if (dst = 9)
 		w = cpu.pmt;
 
-	WriteWord(addr, w);
+	WriteWord(addr, w, memory);
 	cpu.sp += 2;
 
 	if (disassembly)
@@ -703,12 +703,13 @@ void _push()
 
 void _pop()
 {
+	o = 0, z = 0, n = 0, c = 0;
 	ADDR addr = GetPA(cpu.sp - 2);
 	if (addr == 0)
 		return;
 
 	dst = GetInfoFromWord(10, 7, MergeBytes(ir1, ir0));
-	WORD w = ReadWord(addr);
+	WORD w = ReadWord(addr, memory);
 
 	if (dst <= 7)
 		cpu.r[dst] = w;
@@ -719,6 +720,13 @@ void _pop()
 
 	cpu.sp -= 2;
 
+	if (w < 0)
+		n = 1;
+	if (w == 0)
+		z = 1;
+
+	UPDATE_ALL_FLAGS;
+
 	if (disassembly)
 		if (dst <= 7)
 			printf("POP R[%d]\n", dst);
@@ -726,4 +734,132 @@ void _pop()
 			printf("POP PSW\n");
 		else if (dst = 9)
 			printf("POP PMT\n");
+}
+
+void _movtosfr()
+{
+	src = GetInfoFromByte(2, 0, ir1);
+	dst = GetInfoFromByte(7, 6, ir0);
+	char *reg = NULL;
+
+	switch (dst)
+	{
+	case 0:
+		cpu.pc = cpu.r[dst];
+		reg = "PC";
+		break;
+	case 1:
+		cpu.sp = cpu.r[dst];
+		reg = "SP";
+		break;
+	case 2:
+		cpu.psw = cpu.r[dst];
+		reg = "PSW";
+		break;
+	case 3:
+		reg = "PMT";
+		cpu.pmt = cpu.r[dst];
+		break;
+	}
+
+	if (disassembly)
+		printf("MOVTOSFR R[%d], %s", src, reg);
+}
+
+void _movfromsfr()
+{
+	o = 0, z = 0, n = 0, c = 0;
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 6, ir0);
+	char *reg = NULL;
+	REG srcReg;
+
+	switch (src)
+	{
+	case 0:
+		srcReg = cpu.pc;
+		reg = "PC";
+		break;
+	case 1:
+		srcReg = cpu.sp;
+		reg = "SP";
+		break;
+	case 2:
+		srcReg = cpu.psw;
+		reg = "PSW";
+		break;
+	case 3:
+		srcReg = cpu.pmt;
+		reg = "PMT";
+		break;
+	}
+
+	cpu.r[dst] = srcReg;
+
+	if (srcReg < 0)
+		n = 1;
+	if (srcReg == 0)
+		z = 1;
+
+	UPDATE_ALL_FLAGS;
+
+	if (disassembly)
+		printf("MOVFROMSFR R[%d], %s", dst, reg);
+}
+
+void _mov()
+{
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+
+	cpu.r[dst] = cpu.r[src];
+
+	if (disassembly)
+		printf("MOV R[%d], R[%d]", dst, src);
+}
+
+void _in()
+{
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+
+	cpu.r[dst] = ReadWord(io[cpu.r[src]], io);
+
+	if (disassembly)
+		printf("IN R[%d], R[%d]", dst, src);
+}
+
+void _out()
+{
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+
+	WriteWord(cpu.r[dst], cpu.r[src], io);
+
+	if (disassembly)
+		printf("IN R[%d], R[%d]", dst, src);
+}
+
+void _shr()
+{
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	imm = GetInfoFromByte(4, 1, ir0);
+
+	cpu.r[dst] = (cpu.r[src] >> (UWORD)imm);
+	
+	if (disassembly)
+		printf("SHR R[%d], R[%d], %d", dst, src, (UWORD)imm);
+}
+
+void _shl()
+{
+	dst = GetInfoFromByte(2, 0, ir1);
+	src = GetInfoFromByte(7, 5, ir0);
+	imm = GetInfoFromByte(4, 1, ir0);
+
+	cpu.r[dst] = (cpu.r[src] << (UWORD)imm);
+
+	if (disassembly)
+		printf("SHL R[%d], R[%d], %d", dst, src, (UWORD)imm);
 }

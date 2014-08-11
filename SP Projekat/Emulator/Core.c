@@ -5,6 +5,7 @@
 
 CPU cpu;
 MEM memory;
+MEM io;
 UBYTE ir0, ir1;
 
 char work = 1;
@@ -129,9 +130,18 @@ void Emulate()
 		case 24:
 			_pop();
 			break;
+		case 25:
+			_movtosfr();
+			break;
+		case 26:
+			_movfromsfr();
+			break;
+		case 27:
+			_mov();
+			break;
 		}
 		
-		CHECK_PAGE_FAULT;
+		CHECK_INTERRUPTS;
 
 		z = GetFlag(Z);
 		n = GetFlag(N);

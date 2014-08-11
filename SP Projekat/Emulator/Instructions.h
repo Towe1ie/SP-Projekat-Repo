@@ -33,4 +33,14 @@ void _rij(); // ret/iret/jmp
 void _push();
 void _pop();
 
+void _movtosfr();
+void _movfromsfr();
+void _mov();
+
+void _in();
+void _out();
+
+void _shr();
+void _shl();
+
 #endif

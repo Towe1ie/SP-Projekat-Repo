@@ -3,7 +3,7 @@
 
 #define MEMCAP 0x8000
 
-#define CHECK_PAGE_FAULT \
+#define CHECK_INTERRUPTS \
 if (prekid)\
 	goto PREKID;\
 
@@ -31,6 +31,7 @@ typedef struct
 
 extern CPU cpu;
 extern MEM memory;
+extern MEM io;
 extern UBYTE ir0, ir1;
 
 extern char work;
