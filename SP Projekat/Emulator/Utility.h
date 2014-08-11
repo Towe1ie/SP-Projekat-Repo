@@ -23,6 +23,6 @@ BIT GetFlag(FLAG flag);
 UBYTE GetLowerByte(UWORD word);
 UBYTE GetHigherByte(UWORD word);
 
-char JmpFunc();
+char JmpFunc(char* callingFuncName, char disasseble, BIT condition);
 
 #endif

@@ -571,82 +571,52 @@ char _str()
 
 char _je()
 {
-	if (GetFlag(Z))
-		return JmpFunc();
-
-	return 1;
+	return JmpFunc("JE", disassembly, GetFlag(Z));
 }
 
 char _jne()
 {
-	if (!GetFlag(Z))
-		return JmpFunc();
-
-	return 1;
+	return JmpFunc("JE", disassembly, !GetFlag(Z));
 }
 
 char _jge()
 {
-	if (!GetFlag(N) && GetFlag(Z))
-		return JmpFunc();
-
-	return 1;
+	return JmpFunc("JE", disassembly, !GetFlag(N) && GetFlag(Z));
 }
 
 char _jg()
 {
-	if (!GetFlag(N))
-		return JmpFunc();
-
-	return 1;
+	return JmpFunc("JE", disassembly, !GetFlag(N));
 }
 
 char _jle()
 {
-	if (GetFlag(N) && GetFlag(Z))
-		return JmpFunc();
-
-	return 1;
+		return JmpFunc("JE", disassembly, GetFlag(N) && GetFlag(Z));
 }
 
 char _jl()
 {
-	if (GetFlag(N))
-		return JmpFunc();
-
-	return 1;
+	return JmpFunc("JE", disassembly, GetFlag(N));
 }
 
 char _jp()
 {
-	if (!GetFlag(N))
-		return JmpFunc();
-
-	return 1;
+	return JmpFunc("JE", disassembly, !GetFlag(N));
 }
 
 char _jn()
 {
-	if (GetFlag(N))
-		return JmpFunc();
-
-	return 1;
+	return JmpFunc("JE", disassembly, GetFlag(N));
 }
 
 char _jo()
 {
-	if (GetFlag(O))
-		return JmpFunc();
-
-	return 1;
+	return JmpFunc("JE", disassembly, GetFlag(O));
 }
 
 char _jno()
 {
-	if (!GetFlag(O))
-		return JmpFunc();
-
-	return 1;
+	return JmpFunc("JE", disassembly, !GetFlag(O));
 }
 
 char _call()
@@ -665,5 +635,5 @@ char _call()
 
 	memory[addr] = GetHigherByte(cpu.pc);
 
-	return JmpFunc();
+	return JmpFunc("JE", disassembly, ONE);
 }

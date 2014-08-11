@@ -1,5 +1,7 @@
 #include "Utility.h"
 
+#include <stdio.h>
+
 UBYTE GetOPCode(UBYTE byte)
 {
 	byte &= 0xF8; // 1111 1000
@@ -105,33 +107,48 @@ UBYTE GetHigherByte(UWORD word)
 	return GetLowerByte(word >> 8);
 }
 
-char JmpFunc()
+char JmpFunc(char* callingFuncName, char disassemble, BIT condition)
 {
 	WORD dst = 0, imm;
-	if (!(ir1 && BIT2))
+	if (!(ir1 & BIT2))
 	{
 		dst = GetInfoFromWord(9, 7, MergeBytes(ir1, ir0));
 		imm = ExtSgn(ir0, 7);
 
-		cpu.pc = cpu.r[dst] + imm;
+		if (disassemble)
+			printf("%s R[%d], %d\n", callingFuncName, dst, imm);
 
+		if (condition)
+			cpu.pc = cpu.r[dst] + imm;
 	}
 	else
 	{
 		imm = ExtSgnW(MergeBytes(ir1, ir0), 9);
 
 		if (ir1 & BIT1)
-			cpu.pc += imm;
+		{
+			if (disassemble)
+				printf("%s PC, %d\n", callingFuncName, imm);
+
+			if (condition)
+				cpu.pc += imm;
+		}
 		else
 		{
 			ADDR addr = GetPA(cpu.pc + imm);
-			
+
 			if (addr == 0)
 				return 0;
 
-			cpu.pc = memory[addr];
+			if (disassemble)
+				printf("%s [PC, %d]\n", callingFuncName, imm);
+
+			if (condition)
+				cpu.pc = memory[addr];
 		}
 	}
+
+
 
 	return 1;
 }

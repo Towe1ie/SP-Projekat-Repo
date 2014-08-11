@@ -35,7 +35,7 @@ void Emulate()
 	BYTE opCode;
 
 	//cpu.r[0] = -32768;
-	cpu.r[1] = -1;
+	//cpu.r[1] = -1;
 
 	while (work)
 	{
@@ -78,6 +78,10 @@ void Emulate()
 			break;
 		case 9:
 			noPageFault = _ldr();
+			CHECK_PAGE_FAULT;
+			break;
+		case 10:
+			noPageFault = _str();
 			CHECK_PAGE_FAULT;
 			break;
 		case 11:
