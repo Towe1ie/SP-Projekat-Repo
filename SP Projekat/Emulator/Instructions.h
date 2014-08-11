@@ -30,4 +30,7 @@ void _call();
 
 void _rij(); // ret/iret/jmp
 
+void _push();
+void _pop();
+
 #endif

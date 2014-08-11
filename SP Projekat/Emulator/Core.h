@@ -4,7 +4,7 @@
 #define MEMCAP 0x8000
 
 #define CHECK_PAGE_FAULT \
-if (prekid && brPrekid == 1)\
+if (prekid)\
 	goto PREKID;\
 
 typedef short WORD;

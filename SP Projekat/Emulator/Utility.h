@@ -23,7 +23,8 @@ BIT GetFlag(FLAG flag);
 UBYTE GetLowerByte(UWORD word);
 UBYTE GetHigherByte(UWORD word);
 
-WORD GetWord(ADDR addr);
+WORD ReadWord(ADDR addr);
+void WriteWord(ADDR addr, WORD word);
 
 void JmpFunc(char* callingFuncName, char disasseble, BIT condition);
 

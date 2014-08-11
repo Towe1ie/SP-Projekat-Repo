@@ -11,6 +11,8 @@ char work = 1;
 char prekid = 0;
 unsigned char brPrekid = -1;
 
+BYTE* mem = memory;
+
 ADDR GetPA(VADDR vaddr)
 {
 	if (!GetFlag(VM))
@@ -34,6 +36,8 @@ void Emulate()
 
 	char o, c, n, z;
 	BYTE opCode;
+
+	cpu.sp = 0x100;
 
 	//cpu.r[0] = -32768;
 	//cpu.r[1] = -1;
@@ -79,58 +83,56 @@ void Emulate()
 			break;
 		case 9:
 			_ldr();
-			CHECK_PAGE_FAULT;
 			break;
 		case 10:
 			_str();
-			CHECK_PAGE_FAULT;
 			break;
 		case 11:
 			_je();
-			CHECK_PAGE_FAULT;
 			break;
 		case 12:
 			_jne();
-			CHECK_PAGE_FAULT;
 			break;
 		case 13:
 			_jge();
-			CHECK_PAGE_FAULT;
 			break;
 		case 14:
 			_jg();
-			CHECK_PAGE_FAULT;
 			break;
 		case 15:
 			_jle();
-			CHECK_PAGE_FAULT;
 			break;
 		case 16:
 			_jl();
-			CHECK_PAGE_FAULT;
 			break;
 		case 17:
 			_jp();
-			CHECK_PAGE_FAULT;
 			break;
 		case 18:
 			_jn();
-			CHECK_PAGE_FAULT;
 			break;
 		case 19:
 			_jo();
-			CHECK_PAGE_FAULT;
 			break;
 		case 20:
 			_jno();
-			CHECK_PAGE_FAULT;
 			break;
 		case 21:
 			_call();
-			CHECK_PAGE_FAULT;
+			break;
+		case 22:
+			_rij();
+			break;
+		case 23:
+			_push();
+			break;
+		case 24:
+			_pop();
 			break;
 		}
 		
+		CHECK_PAGE_FAULT;
+
 		z = GetFlag(Z);
 		n = GetFlag(N);
 		c = GetFlag(C);
@@ -147,6 +149,8 @@ void Emulate()
 			// save context
 
 			cpu.pc = brPrekid << 1;
+
+			prekid = 0;
 		}
 	}
 }
@@ -174,7 +178,7 @@ ADDR LoadProgram(char *fileName)
 		return -1;
 	}
 
-	fread(memory + entryAddr, sizeof(BYTE), 18, file);
+	fread(memory + entryAddr, sizeof(BYTE), 104, file);
 
 	return entryAddr;
 }

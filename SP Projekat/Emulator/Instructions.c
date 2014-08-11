@@ -572,47 +572,47 @@ void _je()
 
 void _jne()
 {
-	JmpFunc("JE", disassembly, !GetFlag(Z));
+	JmpFunc("JNE", disassembly, !GetFlag(Z));
 }
 
 void _jge()
 {
-	JmpFunc("JE", disassembly, !GetFlag(N) && GetFlag(Z));
+	JmpFunc("JGE", disassembly, !GetFlag(N) && GetFlag(Z));
 }
 
 void _jg()
 {
-	JmpFunc("JE", disassembly, !GetFlag(N));
+	JmpFunc("JG", disassembly, !GetFlag(N));
 }
 
 void _jle()
 {
-	JmpFunc("JE", disassembly, GetFlag(N) && GetFlag(Z));
+	JmpFunc("JLE", disassembly, GetFlag(N) && GetFlag(Z));
 }
 
 void _jl()
 {
-	JmpFunc("JE", disassembly, GetFlag(N));
+	JmpFunc("JL", disassembly, GetFlag(N));
 }
 
 void _jp()
 {
-	JmpFunc("JE", disassembly, !GetFlag(N));
+	JmpFunc("JP", disassembly, !GetFlag(N));
 }
 
 void _jn()
 {
-	JmpFunc("JE", disassembly, GetFlag(N));
+	JmpFunc("JN", disassembly, GetFlag(N));
 }
 
 void _jo()
 {
-	JmpFunc("JE", disassembly, GetFlag(O));
+	JmpFunc("JO", disassembly, GetFlag(O));
 }
 
 void _jno()
 {
-	JmpFunc("JE", disassembly, !GetFlag(O));
+	JmpFunc("JNO", disassembly, !GetFlag(O));
 }
 
 void _call()
@@ -631,7 +631,7 @@ void _call()
 
 	memory[addr] = GetHigherByte(cpu.pc);
 
-	JmpFunc("JE", disassembly, ONE);
+	JmpFunc("CALL", disassembly, ONE);
 }
 
 void _rij()
@@ -645,7 +645,7 @@ void _rij()
 		if (addr == 0)
 			return;
 
-		cpu.psw = GetWord(addr);
+		cpu.psw = ReadWord(addr);
 		cpu.sp -= 2;
 	}
 
@@ -655,7 +655,7 @@ void _rij()
 		if (addr == 0)
 			return;
 
-		cpu.pc = GetWord(addr);
+		cpu.pc = ReadWord(addr);
 		cpu.sp -= 2;
 	}
 	else if (type == 2)
@@ -666,6 +666,64 @@ void _rij()
 		if (addr == 0)
 			return;
 
-		cpu.pc = GetWord(addr);
+		cpu.pc = ReadWord(addr);
 	}
+
+	if (disassembly)
+		printf("RET/IRET/JMP %d, %d", type, imm);
+}
+
+void _push()
+{
+	ADDR addr = GetPA(cpu.sp);
+	if (addr == 0)
+		return;
+
+	dst = GetInfoFromWord(10, 7, MergeBytes(ir1, ir0));
+	WORD w;
+
+	if (dst <= 7)
+		w = cpu.r[dst];
+	else if (dst == 8)
+		w = cpu.psw;
+	else if (dst = 9)
+		w = cpu.pmt;
+
+	WriteWord(addr, w);
+	cpu.sp += 2;
+
+	if (disassembly)
+		if (dst <= 7)
+			printf("PUSH R[%d]\n", dst);
+		else if (dst == 8)
+			printf("PUSH PSW\n");
+		else if (dst = 9)
+			printf("PUSH PMT\n");
+}
+
+void _pop()
+{
+	ADDR addr = GetPA(cpu.sp - 2);
+	if (addr == 0)
+		return;
+
+	dst = GetInfoFromWord(10, 7, MergeBytes(ir1, ir0));
+	WORD w = ReadWord(addr);
+
+	if (dst <= 7)
+		cpu.r[dst] = w;
+	else if (dst == 8)
+		cpu.psw = w;
+	else if (dst = 9)
+		cpu.pmt = w;
+
+	cpu.sp -= 2;
+
+	if (disassembly)
+		if (dst <= 7)
+			printf("POP R[%d]\n", dst);
+		else if (dst == 8)
+			printf("POP PSW\n");
+		else if (dst = 9)
+			printf("POP PMT\n");
 }
