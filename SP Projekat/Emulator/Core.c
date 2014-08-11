@@ -17,7 +17,10 @@ BYTE* mem = memory;
 ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 {
 	if (!GetFlag(VM))
+	{
+		*status = 1;
 		return vaddr;
+	}
 	else
 	{
 		Descriptor* pmt = (Descriptor*)(memory + cpu.pmtp);
@@ -39,6 +42,8 @@ ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 			return 0;
 		}
 		
+		*status = 1;
+
 		return (descriptor.block << 8 | GetLowerByte(vaddr));
 	}
 }
