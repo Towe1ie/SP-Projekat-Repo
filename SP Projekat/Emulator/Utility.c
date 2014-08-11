@@ -107,21 +107,72 @@ UBYTE GetHigherByte(UWORD word)
 	return GetLowerByte(word >> 8);
 }
 
-WORD ReadWord(ADDR addr, MEM memory)
+BYTE ReadByte(VADDR vaddr, char *status)
 {
-	WORD w, w1;
-	w = GetHigherByte(memory[addr+1]);
-	w <<= 8;
-	w1 = GetLowerByte(memory[addr]);
-	w |= w1;
+	ADDR pa = GetPA(vaddr, status, READ);
 
-	return w;
+	if (*status != 1)
+		return 0;
+
+	return memory[pa];
 }
 
-void WriteWord(ADDR addr, WORD word, MEM memory)
+void WriteByte(VADDR vaddr, BYTE byte, char *status)
 {
-	memory[addr++] = GetLowerByte(word);
-	memory[addr] = GetHigherByte(word);
+	ADDR pa = GetPA(vaddr, status, WRITE);
+
+	if (*status != 1)
+		return;
+
+	memory[pa] = byte;
+}
+
+WORD ReadWord(VADDR vaddr, char *status)
+{
+	ADDR pal, pah; 
+	pal = GetPA(vaddr, status, READ);
+
+	if (*status != 1)
+		return 0;
+
+	pah = GetPA(vaddr + 1, status, READ);
+
+	if (*status != 1)
+		return 0;
+
+	return MergeBytes(memory[pah], memory[pal]);
+}
+
+void WriteWord(ADDR vaddr, WORD word, char *status)
+{
+	ADDR pal, pah;
+	pal = GetPA(vaddr, status, WRITE);
+
+	if (*status != 1)
+		return;
+
+	pah = GetPA(vaddr + 1, status, WRITE);
+
+	if (*status != 1)
+		return;
+
+	memory[pal] = GetLowerByte(word);
+	memory[pah] = GetHigherByte(word);
+}
+
+WORD ReadIO(ADDR addr)
+{
+	BYTE bl, bh;
+	bl = io[addr++];
+	bh = io[addr];
+
+	return MergeBytes(bh, bl);
+}
+
+void WriteIO(ADDR addr, WORD word)
+{
+	io[addr++] = GetLowerByte(word);
+	io[addr] = GetHigherByte(word);
 }
 
 void JmpFunc(char* callingFuncName, char disassemble, BIT condition)
@@ -152,16 +203,25 @@ void JmpFunc(char* callingFuncName, char disassemble, BIT condition)
 		}
 		else
 		{
-			ADDR addr = GetPA(cpu.pc + imm);
+			char status;
+			WORD w = ReadWord(cpu.pc + imm, &status);
 
-			if (addr == 0)
+			if (status != 1)
 				return;
 
 			if (disassemble)
 				printf("%s [PC, %d]\n", callingFuncName, imm);
 
 			if (condition)
-				cpu.pc = ReadWord(addr, memory);
+				cpu.pc = w;
 		}
 	}
+}
+
+BIT GetDescriptorFlag(DescriptorFlag flag, Descriptor descriptor)
+{
+	if (1 << flag & descriptor.flags)
+		return ONE;
+	else
+		return ZERO;
 }

@@ -35,6 +35,7 @@ else\
 unsigned char disassembly = 1;
 WORD dst, src, imm, v1, v2; // ovo sam imao u skoro svakoj instrukciji, pa da ne bih stalno alocirao prostor na steku
 unsigned char c, o, n, z;
+char status;
 
 int p = 0;
 
@@ -530,14 +531,12 @@ void _ldr()
 
 	REG srcReg = (src == 7) ? cpu.pc : cpu.r[src];
 
-	ADDR addr = GetPA(srcReg + imm);
+	WORD w = ReadWord(srcReg + imm, &status);
 
-	if (addr == -1)
+	if (status != 1)
 		return;
 
-	cpu.r[dst] = 0;
-	cpu.r[dst] |= memory[addr];
-	cpu.r[dst] |= memory[addr + 1] << sizeof(REG) * 4;
+	cpu.r[dst] = w;
 
 	if (disassembly)
 		(src != 7) ? printf("LDR R[%d], R[%d], %d\n", dst, src, imm) : printf("LDR R[%d], PC, %d\n", dst, imm);
@@ -551,15 +550,10 @@ void _str()
 
 	REG srcReg = (src == 7) ? cpu.pc : cpu.r[src];
 
-	ADDR addr = GetPA(cpu.r[dst] + imm);
+	WriteWord(cpu.r[dst] + imm, srcReg, &status);
 
-	if (addr == -1)
+	if (status != 1)
 		return;
-
-	memory[addr] = 0;
-	memory[addr + 1] = 0;
-	memory[addr] = GetLowerByte(srcReg);
-	memory[addr + 1] = GetHigherByte(srcReg);
 
 	if (disassembly)
 		(src != 7) ? printf("STR R[%d], R[%d], %d\n", dst, src, imm) : printf("STR R[%d], PC, %d\n", dst, imm);
@@ -617,19 +611,11 @@ void _jno()
 
 void _call()
 {
-	ADDR addr = GetPA(cpu.sp++);
-	if (addr == 0)
+	WriteWord(cpu.sp, cpu.pc, &status);
+	if (status != 1)
 		return;
 
-	memory[addr] = GetLowerByte(cpu.pc);
-	addr = GetPA(cpu.sp++);
-	if (addr == 0)
-	{
-		cpu.sp -= 2;
-		return;
-	}
-
-	memory[addr] = GetHigherByte(cpu.pc);
+	cpu.sp += 2;
 
 	JmpFunc("CALL", disassembly, ONE);
 }
@@ -638,35 +624,36 @@ void _rij()
 {
 	UBYTE type = GetInfoFromByte(2, 1, ir1);
 	WORD imm = ExtSgnW(MergeBytes(ir1, ir0), 8);
+	WORD w;
 
 	if (type == 1)
 	{
-		ADDR addr = GetPA(cpu.sp - 2);
-		if (addr == 0)
+		w = ReadWord(cpu.sp - 2, &status);
+		if (status != 1)
 			return;
 
-		cpu.psw = ReadWord(addr, memory);
+		cpu.psw = w;
 		cpu.sp -= 2;
 	}
 
 	if (type == 1 || type == 0)
 	{
-		ADDR addr = GetPA(cpu.sp - 2);
-		if (addr == 0)
+		w = ReadWord(cpu.sp - 2, &status);
+		if (status != 1)
 			return;
 
-		cpu.pc = ReadWord(addr, memory);
+		cpu.pc = w;
 		cpu.sp -= 2;
 	}
 	else if (type == 2)
 		cpu.pc += imm;
 	else
 	{
-		ADDR addr = GetPA(cpu.pc + imm);
-		if (addr == 0)
+		w = ReadWord(cpu.pc + imm, &status);
+		if (status != 1)
 			return;
 
-		cpu.pc = ReadWord(addr, memory);
+		cpu.pc = w;
 	}
 
 	if (disassembly)
@@ -675,10 +662,6 @@ void _rij()
 
 void _push()
 {
-	ADDR addr = GetPA(cpu.sp);
-	if (addr == 0)
-		return;
-
 	dst = GetInfoFromWord(10, 7, MergeBytes(ir1, ir0));
 	WORD w;
 
@@ -687,9 +670,12 @@ void _push()
 	else if (dst == 8)
 		w = cpu.psw;
 	else if (dst = 9)
-		w = cpu.pmt;
+		w = cpu.pmtp;
 
-	WriteWord(addr, w, memory);
+	WriteWord(cpu.sp, w, &status);
+	if (status != 1)
+		return;
+
 	cpu.sp += 2;
 
 	if (disassembly)
@@ -698,25 +684,25 @@ void _push()
 		else if (dst == 8)
 			printf("PUSH PSW\n");
 		else if (dst = 9)
-			printf("PUSH PMT\n");
+			printf("PUSH PMTP\n");
 }
 
 void _pop()
 {
 	o = 0, z = 0, n = 0, c = 0;
-	ADDR addr = GetPA(cpu.sp - 2);
-	if (addr == 0)
-		return;
 
 	dst = GetInfoFromWord(10, 7, MergeBytes(ir1, ir0));
-	WORD w = ReadWord(addr, memory);
+	WORD w = ReadWord(cpu.sp - 2, &status);
+
+	if (status != 1)
+		return;
 
 	if (dst <= 7)
 		cpu.r[dst] = w;
 	else if (dst == 8)
 		cpu.psw = w;
 	else if (dst = 9)
-		cpu.pmt = w;
+		cpu.pmtp = w;
 
 	cpu.sp -= 2;
 
@@ -733,7 +719,7 @@ void _pop()
 		else if (dst == 8)
 			printf("POP PSW\n");
 		else if (dst = 9)
-			printf("POP PMT\n");
+			printf("POP PMTP\n");
 }
 
 void _movtosfr()
@@ -757,8 +743,8 @@ void _movtosfr()
 		reg = "PSW";
 		break;
 	case 3:
-		reg = "PMT";
-		cpu.pmt = cpu.r[dst];
+		reg = "PMTP";
+		cpu.pmtp = cpu.r[dst];
 		break;
 	}
 
@@ -789,8 +775,8 @@ void _movfromsfr()
 		reg = "PSW";
 		break;
 	case 3:
-		srcReg = cpu.pmt;
-		reg = "PMT";
+		srcReg = cpu.pmtp;
+		reg = "PMTP";
 		break;
 	}
 
@@ -823,7 +809,7 @@ void _in()
 	dst = GetInfoFromByte(2, 0, ir1);
 	src = GetInfoFromByte(7, 5, ir0);
 
-	cpu.r[dst] = ReadWord(io[cpu.r[src]], io);
+	cpu.r[dst] = ReadIO(io[cpu.r[src]]);
 
 	if (disassembly)
 		printf("IN R[%d], R[%d]", dst, src);
@@ -834,7 +820,7 @@ void _out()
 	dst = GetInfoFromByte(2, 0, ir1);
 	src = GetInfoFromByte(7, 5, ir0);
 
-	WriteWord(cpu.r[dst], cpu.r[src], io);
+	WriteIO(cpu.r[dst], cpu.r[src]);
 
 	if (disassembly)
 		printf("IN R[%d], R[%d]", dst, src);

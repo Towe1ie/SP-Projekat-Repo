@@ -14,15 +14,32 @@ unsigned char brPrekid = -1;
 
 BYTE* mem = memory;
 
-ADDR GetPA(VADDR vaddr)
+ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 {
 	if (!GetFlag(VM))
 		return vaddr;
 	else
 	{
-		prekid = 1;
-		brPrekid = 1; //page fault
-		return 0;
+		Descriptor* pmt = (Descriptor*)(memory + cpu.pmtp);
+		Descriptor descriptor = pmt[GetHigherByte(vaddr)];
+		if (GetDescriptorFlag(V, descriptor) == ZERO)
+		{
+			*status = 0;
+			prekid = 1;
+			brPrekid = 1;
+
+			return 0;
+		}
+		else if (GetDescriptorFlag(memOp, descriptor) == ZERO)
+		{
+			*status = 2;
+			prekid = 1;
+			brPrekid = 2;
+
+			return 0;
+		}
+		
+		return (descriptor.block << 8 | GetLowerByte(vaddr));
 	}
 }
 

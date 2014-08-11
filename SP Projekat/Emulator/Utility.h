@@ -23,9 +23,18 @@ BIT GetFlag(FLAG flag);
 UBYTE GetLowerByte(UWORD word);
 UBYTE GetHigherByte(UWORD word);
 
-WORD ReadWord(ADDR addr, MEM mem);
-void WriteWord(ADDR addr, WORD word, MEM mem);
+BYTE ReadByte(VADDR vaddr, char *status);
+void WriteByte(VADDR vaddr, BYTE byte, char *status);
+WORD ReadWord(VADDR vaddr, char *status);
+void WriteWord(ADDR vaddr, WORD word, char *status);
+
+WORD ReadIO(ADDR addr);
+void WriteIO(ADDR addr, WORD word);
 
 void JmpFunc(char* callingFuncName, char disasseble, BIT condition);
+
+typedef enum {E = 3, W, R, D, V} DescriptorFlag;
+
+BIT GetDescriptorFlag(DescriptorFlag descriptorFlag, Descriptor descriptor);
 
 #endif
