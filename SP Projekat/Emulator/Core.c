@@ -48,11 +48,30 @@ ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 	}
 }
 
-void Emulate()
+void init()
 {
 	printf("Emulation stared!\n");
 
 	cpu.pc = LoadProgram("program.bin");
+
+	cpu.sp = 0x100;
+
+	/*Descriptor d; //za ovo ubaciti primer sa VM
+	d.flags = 0xff;
+	d.block = 3;
+
+	cpu.pmtp = 0x1000;
+	Descriptor *PMT = (Descriptor*)(memory + cpu.pmtp);
+	PMT[0] = d;
+	d.block = 15;
+	PMT[1] = d;
+
+	SetFlag(VM);*/
+}
+
+void Emulate()
+{
+	init();
 
 	if (cpu.pc == -1)
 		return;
@@ -60,17 +79,21 @@ void Emulate()
 	char o, c, n, z;
 	BYTE opCode;
 
-	cpu.sp = 0x100;
+	
 
 	//cpu.r[0] = -32768;
 	//cpu.r[1] = -1;
 
 	while (work)
 	{
-		char noPageFault = 1;
+		char status;
 
-		ir1 = memory[cpu.pc];
-		ir0 = memory[cpu.pc + 1];
+
+		ir1 = ReadByte(cpu.pc, &status);
+		CHECK_INTERRUPTS;
+		ir0 = ReadByte(cpu.pc + 1, &status);
+		CHECK_INTERRUPTS;
+
 		cpu.pc += 2;
 
 		opCode = GetInfoFromByte(7, 3, ir1);
@@ -210,7 +233,7 @@ ADDR LoadProgram(char *fileName)
 		return -1;
 	}
 
-	fread(memory + entryAddr, sizeof(BYTE), 104, file);
+	fread(memory + entryAddr, sizeof(BYTE), 32786, file);
 
 	return entryAddr;
 }

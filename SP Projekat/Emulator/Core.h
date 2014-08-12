@@ -45,6 +45,7 @@ extern char work;
 extern char prekid;
 extern unsigned char brPrekid;
 
+void init();
 void Emulate();
 ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp); // status : 0 = page fault, 1 = uspesno, 2 = nedozvoljeno pravo
 ADDR LoadProgram(char *fileName);
