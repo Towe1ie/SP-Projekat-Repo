@@ -3,13 +3,21 @@
 
 #include "Core.h"
 
+#include "ElfParser.h"
 
+Elf32_Ehdr* hdr;
+FILE *file;
 
 int main()
 {
-	Emulate();
+	//Emulate();
 
-	system("pause");
+	file = fopen("test.o", "rb");
+
+	elf_Load(file);
+
+
+	//system("pause");
 	
 	return 0;
 }
