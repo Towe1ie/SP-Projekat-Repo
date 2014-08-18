@@ -1,21 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "Core.h"
 
 #include "ElfParser.h"
+#include "ElfCreator.h"
 
 Elf32_Ehdr* hdr;
 FILE *file;
 
-int main()
+int main(int argc, char *argv[])
 {
-	//Emulate();
+	if (argv[1] == NULL)
+		return 1;
 
-	file = fopen("test.o", "rb");
+	if (strcmp(argv[1], "Emulate") == 0)
+		Emulate();
+	else if (strcmp(argv[1], "CreateElf") == 0)
+		Create();
+	else
+		return 2;
 
-	elf_Load(file);
+	//file = fopen("ElfCreator/out.o", "rb");
 
+	//elf_Load(file);
+
+	//Create();
 
 	//system("pause");
 	

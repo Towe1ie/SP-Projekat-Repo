@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "Utility.h"
 #include "Instructions.h"
+#include "ElfParser.h"
 
 CPU cpu;
 MEM memory;
@@ -52,9 +53,9 @@ void init()
 {
 	printf("Emulation stared!\n");
 
-	cpu.pc = LoadProgram("program.bin");
+	cpu.pc = LoadProgram("ElfCreator/out.o");
 
-	cpu.sp = 0x100;
+	cpu.sp = MEMCAP - 1 - 256*3;
 
 	/*Descriptor d; //za ovo ubaciti primer sa VM
 	d.flags = 0xff;
@@ -233,7 +234,11 @@ ADDR LoadProgram(char *fileName)
 		return -1;
 	}
 
-	fread(memory + entryAddr, sizeof(BYTE), 32786, file);
+	elf_Load(file);
+	char status;
+	entryAddr = ReadWord(0, &status);
+
+	//fread(memory + entryAddr, sizeof(BYTE), 32786, file);
 
 	return entryAddr;
 }

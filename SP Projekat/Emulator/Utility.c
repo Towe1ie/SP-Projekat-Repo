@@ -193,7 +193,7 @@ void JmpFunc(char* callingFuncName, char disassemble, BIT condition)
 	{
 		imm = ExtSgnW(MergeBytes(ir1, ir0), 9);
 
-		if (ir1 & BIT1)
+		if (!(ir1 & BIT1))
 		{
 			if (disassemble)
 				printf("%s PC, %d\n", callingFuncName, imm);

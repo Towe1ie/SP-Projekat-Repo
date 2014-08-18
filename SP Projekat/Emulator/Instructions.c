@@ -623,7 +623,7 @@ void _call()
 void _rij()
 {
 	UBYTE type = GetInfoFromByte(2, 1, ir1);
-	WORD imm = ExtSgnW(MergeBytes(ir1, ir0), 8);
+	WORD imm = ExtSgnW(MergeBytes(ir1, ir0), 9);
 	WORD w;
 
 	if (type == 1)
@@ -731,25 +731,25 @@ void _movtosfr()
 	switch (dst)
 	{
 	case 0:
-		cpu.pc = cpu.r[dst];
+		cpu.pc = cpu.r[src];
 		reg = "PC";
 		break;
 	case 1:
-		cpu.sp = cpu.r[dst];
+		cpu.sp = cpu.r[src];
 		reg = "SP";
 		break;
 	case 2:
-		cpu.psw = cpu.r[dst];
+		cpu.psw = cpu.r[src];
 		reg = "PSW";
 		break;
 	case 3:
 		reg = "PMTP";
-		cpu.pmtp = cpu.r[dst];
+		cpu.pmtp = cpu.r[src];
 		break;
 	}
 
 	if (disassembly)
-		printf("MOVTOSFR R[%d], %s", src, reg);
+		printf("MOVTOSFR R[%d], %s\n", src, reg);
 }
 
 void _movfromsfr()
@@ -790,7 +790,7 @@ void _movfromsfr()
 	UPDATE_ALL_FLAGS;
 
 	if (disassembly)
-		printf("MOVFROMSFR R[%d], %s", dst, reg);
+		printf("MOVFROMSFR R[%d], %s\n", dst, reg);
 }
 
 void _mov()
@@ -812,7 +812,7 @@ void _in()
 	cpu.r[dst] = ReadIO(io[cpu.r[src]]);
 
 	if (disassembly)
-		printf("IN R[%d], R[%d]", dst, src);
+		printf("IN R[%d], R[%d]\n", dst, src);
 }
 
 void _out()
@@ -823,7 +823,7 @@ void _out()
 	WriteIO(cpu.r[dst], cpu.r[src]);
 
 	if (disassembly)
-		printf("IN R[%d], R[%d]", dst, src);
+		printf("IN R[%d], R[%d]\n", dst, src);
 }
 
 void _shr()
@@ -835,7 +835,7 @@ void _shr()
 	cpu.r[dst] = (cpu.r[src] >> (UWORD)imm);
 	
 	if (disassembly)
-		printf("SHR R[%d], R[%d], %d", dst, src, (UWORD)imm);
+		printf("SHR R[%d], R[%d], %d\n", dst, src, (UWORD)imm);
 }
 
 void _shl()
@@ -847,5 +847,5 @@ void _shl()
 	cpu.r[dst] = (cpu.r[src] << (UWORD)imm);
 
 	if (disassembly)
-		printf("SHL R[%d], R[%d], %d", dst, src, (UWORD)imm);
+		printf("SHL R[%d], R[%d], %d\n", dst, src, (UWORD)imm);
 }
