@@ -127,6 +127,33 @@ void WriteByte(VADDR vaddr, BYTE byte, char *status)
 	memory[pa] = byte;
 }
 
+void WriteByteLoader(VADDR vaddr, BYTE byte, char *status)
+{
+	ADDR pa = GetPA(vaddr, status, LOAD);
+
+	if (*status != 1 && *status != 2)
+		return;
+
+	memory[pa] = byte;
+}
+
+void WriteWordLoader(VADDR vaddr, WORD word, char *status)
+{
+	ADDR pal, pah;
+	pal = GetPA(vaddr, status, LOAD);
+
+	if (*status != 1 && *status != 2)
+		return;
+
+	pah = GetPA(vaddr + 1, status, LOAD);
+
+	if (*status != 1 && *status != 2)
+		return;
+
+	memory[pal] = GetLowerByte(word);
+	memory[pah] = GetHigherByte(word);
+}
+
 WORD ReadWord(VADDR vaddr, char *status)
 {
 	ADDR pal, pah; 
@@ -224,4 +251,12 @@ BIT GetDescriptorFlag(DescriptorFlag flag, Descriptor descriptor)
 		return ONE;
 	else
 		return ZERO;
+}
+
+void SetDescriptorFlag(DescriptorFlag flag, Descriptor* descriptor, BIT value)
+{
+	if (value == ONE)
+		descriptor->flags |= (1 << flag);
+	else
+		descriptor->flags &= ~(1 << flag);
 }

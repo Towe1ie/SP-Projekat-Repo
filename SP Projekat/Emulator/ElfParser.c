@@ -89,18 +89,21 @@ void elf_LoadRelFile(FILE *file, Elf32_Ehdr* ehdr)
 	{
 		if (shdr[i].sh_flags & SHF_ALLOC)
 		{
+			unsigned int j;
+			char status;
 			void *content = elf_GetSectionContent_i(i, shdr, file);
-			memcpy(memory + shdr[i].sh_addr, content, shdr[i].sh_size);
+			//memcpy(memory + shdr[i].sh_addr, content, shdr[i].sh_size);
+			for (j = 0; j < shdr[i].sh_size; ++j)
+			{
+				WriteByteLoader(shdr[i].sh_addr + j, ((BYTE*)content)[j], &status);
+			}
 
 			if (strstr(shstrtab + shdr[i].sh_name, ".intr") != NULL)
 			{
-				char status;
 				int intrNum;
 				sscanf(shstrtab + shdr[i].sh_name + 5, "%d", &intrNum);
-				WriteWord(intrNum << 1, shdr[i].sh_addr, &status);
+				WriteWordLoader(intrNum << 1, shdr[i].sh_addr, &status);
 			}
 		}
 	}
-
-	printf("JO\n");
 }

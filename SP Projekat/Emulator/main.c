@@ -16,7 +16,13 @@ int main(int argc, char *argv[])
 		return 1;
 
 	if (strcmp(argv[1], "Emulate") == 0)
-		Emulate();
+	{
+		if (argv[2] == NULL)
+			return 1;
+		if (argv[3] != NULL && strcmp(argv[3], "UseVM") == 0)
+			useVM = 1;
+		Emulate(argv[2]);
+	}
 	else if (strcmp(argv[1], "CreateElf") == 0)
 		Create();
 	else

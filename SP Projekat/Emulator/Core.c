@@ -15,6 +15,49 @@ unsigned char brPrekid = -1;
 
 BYTE* mem = memory;
 
+// **** Test ****
+char useVM = 0;
+
+void fillPmt()
+{
+	cpu.pmtp = 256;
+	Descriptor *PMT = (Descriptor*)(memory + cpu.pmtp);
+
+	Descriptor d; //za ovo ubaciti primer sa VM
+	
+	// code
+	SetDescriptorFlag(E, &d, ONE);
+	SetDescriptorFlag(V, &d, ONE);
+	SetDescriptorFlag(R, &d, ONE);
+	SetDescriptorFlag(W, &d, ZERO);
+	SetDescriptorFlag(D, &d, ZERO);
+
+	d.block = 5;
+	PMT[1] = d;
+
+	// 0th block
+	SetDescriptorFlag(R, &d, ONE);
+	d.block = 0;
+	PMT[0] = d;
+
+	// stack
+	SetDescriptorFlag(E, &d, ZERO);
+	SetDescriptorFlag(R, &d, ONE);
+	SetDescriptorFlag(W, &d, ONE);
+	d.block = 17;
+	PMT[253] = d;
+
+	d.block = 102;
+	PMT[254] = d;
+
+	d.block = 44;
+	PMT[255] = d;
+
+	SetFlag(VM);
+}
+// **************
+
+
 ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 {
 	if (!GetFlag(VM))
@@ -34,7 +77,7 @@ ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 
 			return 0;
 		}
-		else if (GetDescriptorFlag(memOp, descriptor) == ZERO)
+		else if (memOp != LOAD && GetDescriptorFlag(memOp, descriptor) == ZERO)
 		{
 			*status = 2;
 			prekid = 1;
@@ -49,41 +92,31 @@ ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 	}
 }
 
-void init()
+
+
+void init(char* fileName)
 {
+	if (useVM)
+		fillPmt();
+
 	printf("Emulation stared!\n");
 
-	cpu.pc = LoadProgram("ElfCreator/out.o");
+	cpu.pc = LoadProgram(fileName);
 
-	cpu.sp = MEMCAP - 1 - 256*3;
+	cpu.sp = MEMCAP - 256*3 + 1;
 
-	/*Descriptor d; //za ovo ubaciti primer sa VM
-	d.flags = 0xff;
-	d.block = 3;
 
-	cpu.pmtp = 0x1000;
-	Descriptor *PMT = (Descriptor*)(memory + cpu.pmtp);
-	PMT[0] = d;
-	d.block = 15;
-	PMT[1] = d;
-
-	SetFlag(VM);*/
 }
 
-void Emulate()
+void Emulate(char* fileName)
 {
-	init();
+	init(fileName);
 
 	if (cpu.pc == -1)
 		return;
 
 	char o, c, n, z;
 	BYTE opCode;
-
-	
-
-	//cpu.r[0] = -32768;
-	//cpu.r[1] = -1;
 
 	while (work)
 	{

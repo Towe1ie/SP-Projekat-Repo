@@ -1,7 +1,7 @@
 #ifndef _CORE_H_
 #define _CORE_H_
 
-#define MEMCAP 0x8000
+#define MEMCAP 65536
 
 #define CHECK_INTERRUPTS \
 if (prekid)\
@@ -21,7 +21,7 @@ typedef BYTE MEM[MEMCAP];
 
 typedef enum {ZERO = 0, ONE} BIT;
 typedef enum {Z = 0, O, C, N, VM = 15} FLAG;
-typedef enum {EXE = 3, WRITE, READ} MEM_OP;
+typedef enum {EXE = 3, WRITE, READ, LOAD} MEM_OP;
 
 typedef struct
 {
@@ -45,9 +45,12 @@ extern char work;
 extern char prekid;
 extern unsigned char brPrekid;
 
-void init();
-void Emulate();
+void init(char* fileName);
+void Emulate(char* fileName);
 ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp); // status : 0 = page fault, 1 = uspesno, 2 = nedozvoljeno pravo
 ADDR LoadProgram(char *fileName);
+
+// ***** za test *****
+extern char useVM;
 
 #endif
