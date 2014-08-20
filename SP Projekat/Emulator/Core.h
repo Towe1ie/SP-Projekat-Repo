@@ -2,6 +2,7 @@
 #define _CORE_H_
 
 #define MEMCAP 65536
+#define BLOCK_SIZE 256
 
 #define CHECK_INTERRUPTS \
 if (prekid)\
@@ -44,6 +45,8 @@ extern UBYTE ir0, ir1;
 extern char work;
 extern char prekid;
 extern unsigned char brPrekid;
+
+extern VADDR entryPoint;
 
 void init(char* fileName);
 void Emulate(char* fileName);

@@ -12,6 +12,7 @@ UBYTE ir0, ir1;
 char work = 1;
 char prekid = 0;
 unsigned char brPrekid = -1;
+VADDR entryPoint;
 
 BYTE* mem = memory;
 
@@ -123,9 +124,9 @@ void Emulate(char* fileName)
 		char status;
 
 
-		ir1 = ReadByte(cpu.pc, &status);
+		ir1 = ReadByteInstr(cpu.pc, &status);
 		CHECK_INTERRUPTS;
-		ir0 = ReadByte(cpu.pc + 1, &status);
+		ir0 = ReadByteInstr(cpu.pc + 1, &status);
 		CHECK_INTERRUPTS;
 
 		cpu.pc += 2;
@@ -218,6 +219,19 @@ void Emulate(char* fileName)
 		case 27:
 			_mov();
 			break;
+		case 28:
+			_in();
+			break;
+		case 29:
+			_out();
+			break;
+		case 30:
+			_shr();
+			break;
+		case 31:
+			_shl();
+			break;
+			
 		}
 		
 		CHECK_INTERRUPTS;
@@ -235,7 +249,24 @@ void Emulate(char* fileName)
 			if (brPrekid == 1)
 				cpu.pc -= 2;
 
+			switch(brPrekid)
+			{
+			case 0:
+				printf("Reset Interrupt\n");
+				break;
+			case 1:
+				printf("PAGE FAULT!\n");
+				break;
+			case 2:
+				printf("Premission denied!\n");
+				break;
+			}
+
 			// save context
+			WriteWord(cpu.sp, cpu.pc, &status);
+			CHECK_INTERRUPTS;
+			WriteWord(cpu.sp, cpu.psw, &status);
+			CHECK_INTERRUPTS;
 
 			cpu.pc = brPrekid << 1;
 
@@ -273,5 +304,5 @@ ADDR LoadProgram(char *fileName)
 
 	//fread(memory + entryAddr, sizeof(BYTE), 32786, file);
 
-	return entryAddr;
+	return entryPoint;
 }

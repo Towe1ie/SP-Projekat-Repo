@@ -36,6 +36,22 @@ UWORD GetInfoFromWord(unsigned int highBit, unsigned int lowBit, UWORD word)
 	return word;
 }
 
+void WriteInfoIntoWord(WORD info, WORD *dst, unsigned int bits)
+{
+	UWORD mask = ~0;
+	UWORD uinfo = info;
+	UWORD udst = *dst;
+
+	mask <<= bits;
+	udst &= mask;
+	mask = ~mask;
+	uinfo &= mask;
+
+	udst |= uinfo;
+
+	*dst = udst;
+}
+
 UWORD MergeBytes(UBYTE high, UBYTE low)
 {
 	UWORD w = high;
@@ -107,6 +123,16 @@ UBYTE GetHigherByte(UWORD word)
 	return GetLowerByte(word >> 8);
 }
 
+BYTE ReadByteInstr(VADDR vaddr, char *status)
+{
+		ADDR pa = GetPA(vaddr, status, EXE);
+
+	if (*status != 1)
+		return 0;
+
+	return memory[pa];
+}
+
 BYTE ReadByte(VADDR vaddr, char *status)
 {
 	ADDR pa = GetPA(vaddr, status, READ);
@@ -135,6 +161,22 @@ void WriteByteLoader(VADDR vaddr, BYTE byte, char *status)
 		return;
 
 	memory[pa] = byte;
+}
+
+WORD ReadWordLoader(VADDR vaddr, char *status)
+{
+	ADDR pal, pah; 
+	pal = GetPA(vaddr, status, LOAD);
+
+	if (*status != 1)
+		return 0;
+
+	pah = GetPA(vaddr + 1, status, LOAD);
+
+	if (*status != 1 && *status != 2)
+		return 0;
+
+	return MergeBytes(memory[pah], memory[pal]);
 }
 
 void WriteWordLoader(VADDR vaddr, WORD word, char *status)

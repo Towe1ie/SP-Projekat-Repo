@@ -10,6 +10,7 @@
 UBYTE GetOPCode(UBYTE byte);
 UBYTE GetInfoFromByte(unsigned int hightBit, unsigned int lowBit, UBYTE byte);
 UWORD GetInfoFromWord(unsigned int highBit, unsigned int lowBit, UWORD word);
+void WriteInfoIntoWord(WORD info, WORD *dst, unsigned int bits);
 
 UWORD MergeBytes(UBYTE high, UBYTE low);
 
@@ -23,8 +24,11 @@ BIT GetFlag(FLAG flag);
 UBYTE GetLowerByte(UWORD word);
 UBYTE GetHigherByte(UWORD word);
 
+WORD ReadWordLoader(VADDR vaddr, char *status);
 void WriteByteLoader(VADDR vaddr, BYTE byte, char *status);
 void WriteWordLoader(VADDR vaddr, WORD word, char *status);
+
+BYTE ReadByteInstr(VADDR vaddr, char *status);
 
 BYTE ReadByte(VADDR vaddr, char *status);
 void WriteByte(VADDR vaddr, BYTE byte, char *status);

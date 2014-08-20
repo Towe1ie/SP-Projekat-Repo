@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
 	{
 		if (argv[2] == NULL)
 			return 1;
+		entryPoint = 256;
 		if (argv[3] != NULL && strcmp(argv[3], "UseVM") == 0)
 			useVM = 1;
 		Emulate(argv[2]);
