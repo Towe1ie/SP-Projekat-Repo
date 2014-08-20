@@ -41,8 +41,7 @@ char shstrtable[] = "\0\0\0\0\0\0\0\0\0\0\0\0\
 .rel.bss\0\0\0\0\
 .rel.shstrt\0\
 .rel.symtab\0\
-LABELA\0\0\0\0\0\0\
-MINMAX\0\0\0\0\0\0";
+main\0\0\0\0\0\0\0\0";
 
 //simboli na 
 

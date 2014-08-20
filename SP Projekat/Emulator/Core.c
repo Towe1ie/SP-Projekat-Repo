@@ -75,8 +75,8 @@ ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 	else
 	{
 		Descriptor* pmt = (Descriptor*)(memory + cpu.pmtp);
-		Descriptor descriptor = pmt[GetHigherByte(vaddr)];
-		if (GetDescriptorFlag(V, descriptor) == ZERO)
+		Descriptor *descriptor = pmt + GetHigherByte(vaddr);
+		if (GetDescriptorFlag(V, *descriptor) == ZERO)
 		{
 			*status = 0;
 			prekid = 1;
@@ -84,7 +84,7 @@ ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 
 			return 0;
 		}
-		else if (memOp != LOAD && GetDescriptorFlag(memOp, descriptor) == ZERO)
+		else if (memOp != LOAD && GetDescriptorFlag(memOp, *descriptor) == ZERO)
 		{
 			*status = 2;
 			prekid = 1;
@@ -95,29 +95,38 @@ ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp)
 		
 		*status = 1;
 
-		return (descriptor.block << 8 | GetLowerByte(vaddr));
+		if (memOp == WRITE)
+		{
+			SetDescriptorFlag(D, descriptor, ONE);
+		}
+
+		return (descriptor->block << 8 | GetLowerByte(vaddr));
 	}
 }
 
 
 
-void init(char* fileName)
+char init(char* fileName)
 {
+	char status;
 	if (useVM)
 		fillPmt();
 
 	printf("Emulation stared!\n");
 
-	cpu.pc = LoadProgram(fileName);
+	status = LoadProgram(fileName);
 
 	cpu.sp = MEMCAP - 256*3 + 1;
 
-
+	return status;
 }
 
 void Emulate(char* fileName)
 {
-	init(fileName);
+	char status;
+
+	status = init(fileName);
+	CHECK_INTERRUPTS; // provera da li je doslo do page faulta pri ucitavanju programa
 
 	if (cpu.pc == -1)
 		return;
@@ -127,9 +136,6 @@ void Emulate(char* fileName)
 
 	while (work)
 	{
-		char status;
-
-
 		ir1 = ReadByteInstr(cpu.pc, &status);
 		CHECK_INTERRUPTS;
 		ir0 = ReadByteInstr(cpu.pc + 1, &status);
@@ -282,7 +288,7 @@ void Emulate(char* fileName)
 }
 
 
-ADDR LoadProgram(char *fileName)
+char LoadProgram(char *fileName)
 {
 	FILE *file = NULL;
 	//int error = fopen_s(&file, fileName, "rb");
@@ -294,21 +300,19 @@ ADDR LoadProgram(char *fileName)
 #endif
 #endif
 
-
-
-	ADDR entryAddr = 0;
-
 	if (file == NULL)
 	{
 		printf("Error in opening file! Error code:\n");
 		return -1;
 	}
 
-	elf_Load(file);
 	char status;
-	entryAddr = ReadWord(0, &status);
+	status = elf_Load(file);
+	if (status == 0)
+		return 0;
+	cpu.pc = ReadWord(0, &status);
 
 	//fread(memory + entryAddr, sizeof(BYTE), 32786, file);
 
-	return entryAddr;
+	return 1;
 }

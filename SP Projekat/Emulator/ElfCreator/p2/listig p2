@@ -10,7 +10,7 @@ add r1, r1, 7  		01 27
 shl r1, r1, 2  		f9 24
 push r0        		b8 00
 push r1		   		b8 80
-call minmax	   		ac 00 //relokacija
+call MINMAX	   		ac 00 //relokacija
 mul r1, r1, 0  		11 20
 movfromsfr r2, sp	d2 40
 sub r2, r1, 4 		0a 24

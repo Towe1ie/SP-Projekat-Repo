@@ -809,7 +809,7 @@ void _in()
 	dst = GetInfoFromByte(2, 0, ir1);
 	src = GetInfoFromByte(7, 5, ir0);
 
-	cpu.r[dst] = ReadIO(io[cpu.r[src]]);
+	cpu.r[dst] = ReadIO(cpu.r[src]);
 
 	if (disassembly)
 		printf("IN R[%d], R[%d]\n", dst, src);
@@ -823,7 +823,7 @@ void _out()
 	WriteIO(cpu.r[dst], cpu.r[src]);
 
 	if (disassembly)
-		printf("IN R[%d], R[%d]\n", dst, src);
+		printf("OUT R[%d], R[%d]\n", dst, src);
 }
 
 void _shr()

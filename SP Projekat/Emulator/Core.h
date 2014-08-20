@@ -48,10 +48,10 @@ extern unsigned char brPrekid;
 
 extern VADDR entryPoint;
 
-void init(char* fileName);
+char init(char* fileName);
 void Emulate(char* fileName);
 ADDR GetPA(VADDR vaddr, char *status, MEM_OP memOp); // status : 0 = page fault, 1 = uspesno, 2 = nedozvoljeno pravo
-ADDR LoadProgram(char *fileName);
+char LoadProgram(char *fileName);
 
 // ***** za test *****
 extern char useVM;

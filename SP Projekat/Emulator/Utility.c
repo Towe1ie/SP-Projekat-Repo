@@ -267,11 +267,11 @@ WORD ReadIO(ADDR addr)
 
 void WriteIO(ADDR addr, WORD word)
 {
-	io[addr++] = GetLowerByte(word);
-	io[addr] = GetHigherByte(word);
-
 	if (addr == 0x1000)
 		printf("%d", word);
+
+	io[addr++] = GetLowerByte(word);
+	io[addr] = GetHigherByte(word);
 }
 
 void JmpFunc(char* callingFuncName, char disassemble, BIT condition)

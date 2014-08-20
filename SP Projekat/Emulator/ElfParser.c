@@ -5,20 +5,22 @@
 
 #define CHAR_TO_INT(c) c - '0'
 
-VADDR elf_Load(FILE *file)
+char elf_Load(FILE *file)
 {
 	Elf32_Ehdr *elf_hdr = elf_ReadHeader(file);
 	VADDR textAddr;
+	char status;
 
 	switch(elf_hdr->e_type)
 	{
 	case ET_REL:
-		textAddr = elf_LoadRelFile(file, elf_hdr);
-		break;
-	case ET_EXEC:
-		elf_LoadExeFile(file, elf_hdr);
+		status = elf_LoadRelFile(file, elf_hdr);
+		if (status == 0)
+			return 0;
 		break;
 	}
+
+	return 1;
 }
 
 Elf32_Ehdr* elf_ReadHeader(FILE *file)
@@ -29,15 +31,6 @@ Elf32_Ehdr* elf_ReadHeader(FILE *file)
 	fread(hdr, sizeof(Elf32_Ehdr), 1, file);
 
 	return hdr;
-}
-
-void elf_LoadExeFile(FILE *file, Elf32_Ehdr* hdr)
-{
-	Elf32_Phdr *phdr = (Elf32_Phdr*)malloc(hdr->e_phentsize * hdr->e_phnum);
-	fseek(file, hdr->e_phoff, SEEK_SET);
-	fread(phdr, sizeof(Elf32_Phdr), hdr->e_phnum, file);
-
-	printf("JO\n");
 }
 
 Elf32_Shdr* elf_GetSectionHederTable(FILE *file, Elf32_Ehdr *ehdr)
@@ -100,42 +93,52 @@ void* elf_GetSectionContent(char* sectionName, char* shstrtab, Elf32_Ehdr *ehdr,
 	return elf_GetSectionContent_i(i, shdr, file);
 }
 
-void elf_LoadContent(FILE *file, Elf32_Shdr *shdr, unsigned int i, char* shstrtab)
+char elf_LoadContent(FILE *file, Elf32_Shdr *shdr, unsigned int i, char* shstrtab)
 {
-				unsigned int j;
-			char status;
-			void *content = elf_GetSectionContent_i(i, shdr, file);
-			//memcpy(memory + shdr[i].sh_addr, content, shdr[i].sh_size);
-			for (j = 0; j < shdr[i].sh_size; ++j)
-			{
-				WriteByteLoader(shdr[i].sh_addr + j, ((BYTE*)content)[j], &status);
-			}
+	unsigned int j;
+	char status;
+	void *content = elf_GetSectionContent_i(i, shdr, file);
+			
+	for (j = 0; j < shdr[i].sh_size; ++j)
+	{
+		WriteByteLoader(shdr[i].sh_addr + j, ((BYTE*)content)[j], &status);
+		if (status == 0)
+			return 0;
+	}
 
-			if (strstr(shstrtab + shdr[i].sh_name, ".intr") != NULL)
-			{
-				int intrNum;
-				sscanf(shstrtab + shdr[i].sh_name + 5, "%d", &intrNum);
-				WriteWordLoader(intrNum << 1, shdr[i].sh_addr, &status);
-			}
+	if (strstr(shstrtab + shdr[i].sh_name, ".intr") != NULL)
+	{
+		int intrNum;
+		sscanf(shstrtab + shdr[i].sh_name + 5, "%d", &intrNum);
+		WriteWordLoader(intrNum << 1, shdr[i].sh_addr, &status);
+		if (status == 0)
+			return 0;
+	}
+	return 1;
 }
 
-void elf_LoadNoRels(FILE *file, Elf32_Ehdr* ehdr, Elf32_Shdr *shdr, char *shstrtab)
+char elf_LoadNoRels(FILE *file, Elf32_Ehdr* ehdr, Elf32_Shdr *shdr, char *shstrtab)
 {
 	unsigned int i;
+	char status;
+
 	for (i = 0; i < ehdr->e_shnum; ++i)
 	{
 		if (shdr[i].sh_flags & SHF_ALLOC)
 		{
-			elf_LoadContent(file, shdr, i, shstrtab);
+			status = elf_LoadContent(file, shdr, i, shstrtab);
+			if (status == 0)
+				return 0;
 		}
 	}
 }
 
-VADDR elf_LoadWithRels(FILE *file, Elf32_Ehdr* ehdr, Elf32_Shdr *shdr, Elf32_Sym *symtab, char *shstrtab)
+char elf_LoadWithRels(FILE *file, Elf32_Ehdr* ehdr, Elf32_Shdr *shdr, Elf32_Sym *symtab, char *shstrtab)
 {
 	Elf32_Word prems[3] = {SHF_EXECINSTR, SHF_WRITE, SHF_WRITE | SHF_EXECINSTR};
-	VADDR currentAddr = entryPoint, textAddr;
-	unsigned int i, j, k;
+	VADDR currentAddr = entryPoint;
+	unsigned int i, j;
+	char status;
 
 	for (i = 0; i < 3; ++i)
 	{
@@ -149,19 +152,20 @@ VADDR elf_LoadWithRels(FILE *file, Elf32_Ehdr* ehdr, Elf32_Shdr *shdr, Elf32_Sym
 			{
 				if ((shdr[j].sh_flags & SHF_ALLOC) && (shdr[j].sh_flags & currentPrem))
 				{
-					if (strcmp(".text", shstrtab + shdr[j].sh_name) == 0)
-						textAddr = currentAddr;
-
 					shdr[j].sh_addr = currentAddr;
 					symtab[j].st_value = currentAddr;
-					elf_LoadContent(file, shdr, j, shstrtab);
+					status = elf_LoadContent(file, shdr, j, shstrtab);
+					if (status == 0)
+						return 0;
 					currentAddr += shdr[j].sh_size;
 				}
 			}
 			else if ((shdr[j].sh_flags & SHF_ALLOC) && (~shdr[j].sh_flags & SHF_EXECINSTR) && (~shdr[j].sh_flags & SHF_WRITE))
 			{
 					shdr[j].sh_addr = currentAddr;
-					elf_LoadContent(file, shdr, j, shstrtab);
+					status = elf_LoadContent(file, shdr, j, shstrtab);
+					if (status == 0)
+						return 0;
 					currentAddr += shdr[j].sh_size;
 			}
 		}
@@ -181,25 +185,33 @@ VADDR elf_LoadWithRels(FILE *file, Elf32_Ehdr* ehdr, Elf32_Shdr *shdr, Elf32_Sym
 		}
 	}
 
-	return textAddr;
+	return 1;
 }
 
-VADDR elf_LoadRelFile(FILE *file, Elf32_Ehdr* ehdr)
+char elf_LoadRelFile(FILE *file, Elf32_Ehdr* ehdr)
 {
 	unsigned int i = 0;
-	VADDR textAddr;
+	char status;
 
 	Elf32_Shdr *shdr = elf_GetSectionHederTable(file, ehdr);
 
 	char *shstrtab = elf_GetShstrtab(ehdr, shdr, file);
 
-	Elf32_Sym* symtab = (Elf32_Sym*)elf_GetSectionContent(".symtab", shstrtab, ehdr, shdr, file);
+	if (elf_RelocationExists(ehdr, shdr))
+	{
+		Elf32_Sym* symtab = (Elf32_Sym*)elf_GetSectionContent(".symtab", shstrtab, ehdr, shdr, file);
+		status = elf_LoadWithRels(file, ehdr, shdr, symtab, shstrtab);
+		if (status == 0)
+			return 0;
+	}
+	else
+	{
+		status = elf_LoadNoRels(file, ehdr, shdr, shstrtab);
+		if (status == 0)
+			return 0;
+	}
 
-	//elf_LoadNoRels(file, ehdr, shdr, shstrtab);
-
-	textAddr = elf_LoadWithRels(file, ehdr, shdr, symtab, shstrtab);
-
-	return textAddr;
+	return 1;
 }
 
 void elf_ResolveRelocation(Elf32_Rela *rela, Elf32_Sym* symtable, Elf32_Shdr *shdr, Elf32_Shdr* section)
@@ -222,4 +234,15 @@ void elf_ResolveRelocation(Elf32_Rela *rela, Elf32_Sym* symtable, Elf32_Shdr *sh
 	WriteInfoIntoWord(fill, &w, 9);
 
 	WriteWordLoaderReverseOrder(vaddr, w, &status); 
+}
+
+char elf_RelocationExists(Elf32_Ehdr *ehdr, Elf32_Shdr *shdr)
+{
+	unsigned int i;
+
+	for (i = 0; i < ehdr->e_shnum; ++i)
+		if (shdr[i].sh_type == SHT_RELA)
+			return 1;
+
+	return 0;
 }

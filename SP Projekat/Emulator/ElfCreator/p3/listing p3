@@ -1,0 +1,18 @@
+.intr0
+mul r0, r0, 0 			10 00
+push r0					b8 00	
+pop psw					c4 00
+jmp main  //relokacija 	b4 00
+
+
+.text
+main:
+add r0, r0, 1 			00 01
+shl r0, r0, 13			f8 1a	
+add r1, r1, 1 			01 21
+shl r1, r1, 12 			f9 38
+in r2, r0 				e2 00
+in r3, r0 				e3 00
+mul r2, r3 				12 61
+out r1, r3 				e9 60
+
