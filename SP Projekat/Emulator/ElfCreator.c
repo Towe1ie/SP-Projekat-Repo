@@ -41,7 +41,8 @@ char shstrtable[] = "\0\0\0\0\0\0\0\0\0\0\0\0\
 .rel.bss\0\0\0\0\
 .rel.shstrt\0\
 .rel.symtab\0\
-poruka\0\0\0\0\0\0";
+LABELA\0\0\0\0\0\0\
+MINMAX\0\0\0\0\0\0";
 
 //simboli na 
 
@@ -146,6 +147,8 @@ void Create()
 	}
 
 	// bss section
+	printf("\nbss size = ");
+	scanf("%d", &bss);
 	if (bss > 0)
 	{
 		shdr.sh_name = shdr.sh_name = 20* STR_ENT + 4;

@@ -163,20 +163,37 @@ void WriteByteLoader(VADDR vaddr, BYTE byte, char *status)
 	memory[pa] = byte;
 }
 
-WORD ReadWordLoader(VADDR vaddr, char *status)
+WORD ReadWordLoaderReverseOrder(VADDR vaddr, char *status)
 {
 	ADDR pal, pah; 
-	pal = GetPA(vaddr, status, LOAD);
+	pal = GetPA(vaddr + 1, status, LOAD);
 
 	if (*status != 1)
 		return 0;
 
-	pah = GetPA(vaddr + 1, status, LOAD);
+	pah = GetPA(vaddr, status, LOAD);
 
 	if (*status != 1 && *status != 2)
 		return 0;
 
 	return MergeBytes(memory[pah], memory[pal]);
+}
+
+void WriteWordLoaderReverseOrder(VADDR vaddr, WORD word, char *status)
+{
+	ADDR pal, pah;
+	pal = GetPA(vaddr + 1, status, LOAD);
+
+	if (*status != 1 && *status != 2)
+		return;
+
+	pah = GetPA(vaddr, status, LOAD);
+
+	if (*status != 1 && *status != 2)
+		return;
+
+	memory[pal] = GetLowerByte(word);
+	memory[pah] = GetHigherByte(word);
 }
 
 void WriteWordLoader(VADDR vaddr, WORD word, char *status)
@@ -232,6 +249,16 @@ void WriteWord(ADDR vaddr, WORD word, char *status)
 WORD ReadIO(ADDR addr)
 {
 	BYTE bl, bh;
+	int t;
+	WORD w;
+
+	if (addr == 0x2000)
+	{
+		scanf("%d", &t);
+		w = t;
+		WriteIO(0x2000, w);
+	}
+
 	bl = io[addr++];
 	bh = io[addr];
 
@@ -242,6 +269,9 @@ void WriteIO(ADDR addr, WORD word)
 {
 	io[addr++] = GetLowerByte(word);
 	io[addr] = GetHigherByte(word);
+
+	if (addr == 0x1000)
+		printf("%d", word);
 }
 
 void JmpFunc(char* callingFuncName, char disassemble, BIT condition)

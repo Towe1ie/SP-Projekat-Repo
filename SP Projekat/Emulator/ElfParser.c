@@ -176,7 +176,7 @@ VADDR elf_LoadWithRels(FILE *file, Elf32_Ehdr* ehdr, Elf32_Shdr *shdr, Elf32_Sym
 
 			for (j = 0; j < shdr[i].sh_size/sizeof(Elf32_Rela); ++j)
 			{				
-				elf_ResolveRelocation(rel + i, symtab, shdr, sectionH);
+				elf_ResolveRelocation(rel + j, symtab, shdr, sectionH);
 			}
 		}
 	}
@@ -204,6 +204,7 @@ VADDR elf_LoadRelFile(FILE *file, Elf32_Ehdr* ehdr)
 
 void elf_ResolveRelocation(Elf32_Rela *rela, Elf32_Sym* symtable, Elf32_Shdr *shdr, Elf32_Shdr* section)
 {
+	unsigned int s = ELF32_R_SYM(rela->r_info);
 	Elf32_Sym *sym = symtable + ELF32_R_SYM(rela->r_info);
 	WORD fill = sym->st_value;
 
@@ -211,13 +212,14 @@ void elf_ResolveRelocation(Elf32_Rela *rela, Elf32_Sym* symtable, Elf32_Shdr *sh
 		fill += symtable[sym->st_shndx].st_value;
 
 	fill -= rela->r_offset;
+	fill -= section->sh_addr;
 	fill += rela->r_addend;
 
 	char status;
 	VADDR vaddr = section->sh_addr + rela->r_offset;
-	WORD w = ReadWordLoader(vaddr, &status);
+	WORD w = ReadWordLoaderReverseOrder(vaddr, &status);
 
 	WriteInfoIntoWord(fill, &w, 9);
 
-	WriteWordLoader(vaddr, w, &status); 
+	WriteWordLoaderReverseOrder(vaddr, w, &status); 
 }

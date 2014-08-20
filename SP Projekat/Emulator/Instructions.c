@@ -801,7 +801,7 @@ void _mov()
 	cpu.r[dst] = cpu.r[src];
 
 	if (disassembly)
-		printf("MOV R[%d], R[%d]", dst, src);
+		printf("MOV R[%d], R[%d]\n", dst, src);
 }
 
 void _in()

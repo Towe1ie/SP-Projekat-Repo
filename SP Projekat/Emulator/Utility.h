@@ -24,7 +24,8 @@ BIT GetFlag(FLAG flag);
 UBYTE GetLowerByte(UWORD word);
 UBYTE GetHigherByte(UWORD word);
 
-WORD ReadWordLoader(VADDR vaddr, char *status);
+WORD ReadWordLoaderReverseOrder(VADDR vaddr, char *status);
+void WriteWordLoaderReverseOrder(VADDR vaddr, WORD word, char *status);
 void WriteByteLoader(VADDR vaddr, BYTE byte, char *status);
 void WriteWordLoader(VADDR vaddr, WORD word, char *status);
 

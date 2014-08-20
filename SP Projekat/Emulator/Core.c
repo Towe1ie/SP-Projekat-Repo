@@ -41,6 +41,12 @@ void fillPmt()
 	d.block = 0;
 	PMT[0] = d;
 
+	// pg.2
+	d.block = 89;
+	SetDescriptorFlag(W, &d, ONE);
+	SetDescriptorFlag(E, &d, ZERO);
+	PMT[2] = d;
+
 	// stack
 	SetDescriptorFlag(E, &d, ZERO);
 	SetDescriptorFlag(R, &d, ONE);
@@ -304,5 +310,5 @@ ADDR LoadProgram(char *fileName)
 
 	//fread(memory + entryAddr, sizeof(BYTE), 32786, file);
 
-	return entryPoint;
+	return entryAddr;
 }
